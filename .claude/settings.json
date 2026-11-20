@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(scripts/commit_part.sh:*)",
+      "Bash(./scripts/commit_part.sh:*)",
+      "Bash(/Users/arjunvarshney/Documents/hackathons/tokens_personalagents/scripts/commit_part.sh:*)"
+    ]
+  }
+}

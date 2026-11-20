@@ -27,3 +27,5 @@ browser_profile/
 *.sqlite
 frames/
 .pytest_cache/
+cognee_data/
+memory.db
