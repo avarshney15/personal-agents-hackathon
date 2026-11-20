@@ -124,7 +124,7 @@ export function AskScreen() {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
         />
-        <button type="submit" className="ft-send" aria-label="Send" disabled={pending !== null || !draft.trim()}>
+        <button type="submit" className="ft-send" aria-label="Send" disabled={pending !== null}>
           <SendIcon />
         </button>
       </form>

@@ -1,5 +1,5 @@
 // Small shared pieces: icons, tiles, pills, buttons, the tab bar, the sheet and a polling hook.
-import { useEffect, useLayoutEffect, useRef, type ReactNode, type RefObject } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import { hrefFor, useNav, type Route } from './nav'
 import { initials, tileGradient } from './format'
 import type { PickTag } from './types'
@@ -187,12 +187,15 @@ export function Sheet({
   children: ReactNode
 }) {
   const ref = useRef<HTMLDivElement>(null)
+  // Whatever had focus when the sheet opened gets it back on close.
+  const [opener] = useState(() => document.activeElement as HTMLElement | null)
   useEffect(() => {
-    const opener = document.activeElement as HTMLElement | null
-    const title = document.getElementById(labelledBy)
-    title?.focus({ preventScroll: true })
-    return () => opener?.focus?.({ preventScroll: true })
-  }, [labelledBy])
+    document.getElementById(labelledBy)?.focus({ preventScroll: true })
+    return () => {
+      // Next frame: the page behind is inert until this sheet is gone.
+      requestAnimationFrame(() => opener?.focus?.({ preventScroll: true }))
+    }
+  }, [labelledBy, opener])
   return (
     <div
       className={`scrim${solid ? ' scrim-solid' : ''}`}

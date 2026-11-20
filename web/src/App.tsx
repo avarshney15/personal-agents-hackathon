@@ -20,7 +20,8 @@ const TAB_ROUTES = new Set<Route['name']>(['week', 'discover', 'sites', 'profile
 
 // Back from Persona's hosted flow with ?verified=1: note it, then drop it from the URL.
 const returnedFromPersona = new URLSearchParams(window.location.search).get('verified') === '1'
-const openedWithoutRoute = window.location.hash.replace(/^#\/?/, '') === '' && window.location.pathname !== '/ops'
+const openedWithoutRoute =
+  !returnedFromPersona && window.location.hash.replace(/^#\/?/, '') === '' && window.location.pathname !== '/ops'
 if (returnedFromPersona) {
   const params = new URLSearchParams(window.location.search)
   params.delete('verified')
