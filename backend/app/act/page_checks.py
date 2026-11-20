@@ -52,7 +52,9 @@ SCAN_JS = r"""
     ld: [...document.querySelectorAll('script[type="application/ld+json"]')].map(s => s.textContent),
     next: next ? next.textContent : null,
     frames: [...document.querySelectorAll('iframe')].map(f => f.src || ''),
+    // Luma's own sign-in links only: hosts often link their own member logins in the event text.
     signin_links: [...document.querySelectorAll('a[href*="signin"], a[href*="/login"]')]
+      .filter(a => /(^|\.)(lu\.ma|luma\.com)$/i.test(a.hostname))
       .filter(visible).length,
   };
 }
@@ -63,7 +65,7 @@ SCAN_JS = r"""
 PAID_BUTTON = re.compile(r"^((get|buy) tickets?|check ?out|purchase|pay( now)?)$", re.I)
 REGISTER_BUTTON = re.compile(
     r"^(one[- ]click rsvp|rsvp|register|register now|request to join|join event|reserve( a)? spot"
-    r"|attend|sign up)\b", re.I)
+    r"|attend|sign up|accept invite)\b", re.I)  # invite-only events show "Accept Invite"
 FULL_LINE = re.compile(
     r"^(sold out|event (is )?full|(this event is )?at capacity|registration (is )?closed"
     r"|no longer accepting (registrations|guests))[.!]?$", re.I)
