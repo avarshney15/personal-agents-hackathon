@@ -1,1 +1,2 @@
 # Part-owned: add this part's own dependencies below
+# Part 5 needs nothing beyond base.txt (fastapi, httpx, pydantic, python-dotenv); sqlite3 and zoneinfo are stdlib.
