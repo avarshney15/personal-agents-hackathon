@@ -13,7 +13,7 @@ from functools import lru_cache
 
 from dotenv import load_dotenv
 
-from app.contracts import Catalog, Identity, Memory, Ranking, RsvpAgent, Telemetry
+from app.contracts import Calendar, Catalog, Identity, Memory, Ranking, RsvpAgent, Telemetry
 
 load_dotenv()
 
@@ -71,6 +71,16 @@ def get_catalog() -> Catalog:
     except (ImportError, FileNotFoundError):
         from app.catalog.fake import FakeCatalog
         return FakeCatalog()
+
+
+@lru_cache
+def get_calendar() -> Calendar:
+    """CALENDAR_SOURCE=airbyte reads Google Calendar through PyAirbyte (stretch)."""
+    if os.getenv("CALENDAR_SOURCE", "fake").strip().lower() == "airbyte":
+        from app.extra.calendar_airbyte import AirbyteCalendar
+        return AirbyteCalendar()
+    from app.extra.calendar_fake import FakeCalendar
+    return FakeCalendar()
 
 
 @lru_cache

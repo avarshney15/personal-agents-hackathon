@@ -24,7 +24,7 @@
 
   <div style="display: flex; flex-direction: column;">
     <sc-for list="{{events}}" as="e" hint-placeholder-count="4">
-      <div style="display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #e6e4de;">
+      <a href="Event.dc.html" style="display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #e6e4de; color: #111214; text-decoration: none;">
         <div style="width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, {{e.c1}}, {{e.c2}}); color: #ffffff; font-size: 20px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">{{e.ini}}</div>
         <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0;">
           <div style="display: flex; gap: 6px; align-items: center;">
@@ -34,14 +34,17 @@
           <span style="font-size: 14px; color: #6b6e76;">{{e.meta}}</span>
           <span style="font-size: 13px; line-height: 1.45; color: #111214;">{{e.why}}</span>
         </div>
-      </div>
+      </a>
     </sc-for>
   </div>
 
   <span style="font-size: 13px; line-height: 1.45; color: #6b6e76;">Ranked by what you&#8217;ve been to and skipped. You&#8217;re in the new ranking this week.</span>
 
   <div style="position: absolute; left: 16px; right: 16px; bottom: 24px; height: 64px; border-radius: 999px; background: #ffffff; box-shadow: 0 1px 2px rgba(17,18,20,.04), 0 10px 30px rgba(17,18,20,.08); display: flex; align-items: center; justify-content: space-around; font-size: 12px; font-weight: 650; color: #6b6e76;">
-    <span>Week</span><span style="color: #111214;">Discover</span><span>People</span><span>Sites</span><span>Profile</span>
+    <a href="Week.dc.html" style="color: #6b6e76; text-decoration: none;">Week</a>
+    <a href="Discover.dc.html" style="color: #111214; text-decoration: none;">Discover</a>
+    <a href="Connect.dc.html" style="color: #6b6e76; text-decoration: none;">Sites</a>
+    <a href="Profile.dc.html" style="color: #6b6e76; text-decoration: none;">Profile</a>
   </div>
 </div>
 </x-dc>

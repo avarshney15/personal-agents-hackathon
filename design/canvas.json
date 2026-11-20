@@ -7,15 +7,29 @@
   "boards": {
     "Main.dc.html": {"x": 0, "y": 0, "w": 1440, "h": 1180, "title": "Sponsor map"},
     "Plan.dc.html": {"x": 1520, "y": 0, "w": 900, "h": 1180, "title": "Build plan, 11:00 to 4:30"},
-    "Verify.dc.html": {"x": 0, "y": 1560, "w": 390, "h": 844, "title": "1 · Verify once (Persona)"},
-    "Discover.dc.html": {"x": 470, "y": 1560, "w": 390, "h": 844, "title": "2 · For you (Cognee + Superlinked + Statsig)"},
-    "Rsvp.dc.html": {"x": 940, "y": 1560, "w": 390, "h": 844, "title": "3 · RSVP that says who it is (Persona + Amplitude)"},
-    "Memory.dc.html": {"x": 1410, "y": 1560, "w": 390, "h": 844, "title": "4 · What the agent remembers (Cognee)"}
+    "Welcome.dc.html": {"x": 0, "y": 1560, "w": 390, "h": 844, "title": "Sign in", "is_interactive": true},
+    "Verify.dc.html": {"x": 470, "y": 1560, "w": 390, "h": 844, "title": "Verify once · Persona", "is_interactive": true},
+    "Connect.dc.html": {"x": 940, "y": 1560, "w": 390, "h": 844, "title": "Connect your sites · Airbyte for calendar", "is_interactive": true},
+    "Taste.dc.html": {"x": 1410, "y": 1560, "w": 390, "h": 844, "title": "Into right now · Cognee", "is_interactive": true},
+    "Week.dc.html": {"x": 0, "y": 2824, "w": 390, "h": 844, "title": "My week · clash with your calendar", "is_interactive": true},
+    "Discover.dc.html": {"x": 470, "y": 2824, "w": 390, "h": 844, "title": "For you · Cognee + Superlinked + Statsig", "is_interactive": true},
+    "Ask.dc.html": {"x": 940, "y": 2824, "w": 390, "h": 844, "title": "Ask · Arcee + Superlinked", "is_interactive": true},
+    "Event.dc.html": {"x": 1410, "y": 2824, "w": 390, "h": 844, "title": "Event sheet · why it fits", "is_interactive": true},
+    "Rsvp.dc.html": {"x": 0, "y": 3968, "w": 390, "h": 844, "title": "RSVP that says who it is · Persona + Amplitude", "is_interactive": true},
+    "NeedsYou.dc.html": {"x": 470, "y": 3968, "w": 390, "h": 844, "title": "Needs you · a code from Luma", "is_interactive": true},
+    "Going.dc.html": {"x": 940, "y": 3968, "w": 390, "h": 844, "title": "You're going", "is_interactive": true},
+    "Activity.dc.html": {"x": 1410, "y": 3968, "w": 390, "h": 844, "title": "What the agent did · Guild spend cap"},
+    "Memory.dc.html": {"x": 0, "y": 5112, "w": 390, "h": 844, "title": "What the agent remembers · Cognee"},
+    "Profile.dc.html": {"x": 470, "y": 5112, "w": 390, "h": 844, "title": "Profile · trust and control", "is_interactive": true},
+    "Ops.dc.html": {"x": 940, "y": 5112, "w": 1280, "h": 900, "title": "Team dashboard · Amplitude, Statsig, Firedrill", "expand": "fill"}
   },
-  "order": ["Main.dc.html", "Plan.dc.html", "Verify.dc.html", "Discover.dc.html", "Rsvp.dc.html", "Memory.dc.html"],
+  "order": ["Main.dc.html", "Plan.dc.html", "Welcome.dc.html", "Verify.dc.html", "Connect.dc.html", "Taste.dc.html", "Week.dc.html", "Discover.dc.html", "Ask.dc.html", "Event.dc.html", "Rsvp.dc.html", "NeedsYou.dc.html", "Going.dc.html", "Activity.dc.html", "Memory.dc.html", "Profile.dc.html", "Ops.dc.html"],
   "notes": {
     "t1": {"x": 0, "y": -300, "text": "Event Agent, rebuilt on the Personal Agents Hack sponsors", "kind": "title1", "maxW": 2420},
-    "t2": {"x": 0, "y": 1260, "text": "What a judge sees: the demo, screen by screen", "kind": "title1", "maxW": 1800}
+    "t2": {"x": 0, "y": 1260, "text": "1 · Getting started: sign in, verify once, connect, say what you're into", "kind": "title1", "maxW": 1800},
+    "t3": {"x": 0, "y": 2524, "text": "2 · Every day: your week, picks for you, ask, one event", "kind": "title1", "maxW": 1800},
+    "t4": {"x": 0, "y": 3668, "text": "3 · The agent at work: RSVP, when it needs you, done, the record", "kind": "title1", "maxW": 1800},
+    "t5": {"x": 0, "y": 4812, "text": "4 · Trust and control, and the team's dashboard", "kind": "title1", "maxW": 2220}
   },
   "designSystems": [
     {"title": "Event Agent", "namespace": "event-agent", "artifact": "https://claude.ai/artifact/78MDZLBqowBKzqyHDfvE6r", "version": "1795148205-10bf", "copiedAt": "2026-11-20T10:30:00Z"}

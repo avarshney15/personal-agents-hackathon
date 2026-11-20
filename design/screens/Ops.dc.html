@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Team dashboard</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>body{margin:0}</style>
+</helmet>
+<div style="box-sizing: border-box; min-height: 900px; padding: 40px 24px; background: #f5f4f0; color: #111214; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;">
+<div style="max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
+  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px;">
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <h1 style="margin: 0; font-size: 32px; line-height: 1.12; font-weight: 750; letter-spacing: -0.025em;">How the agent is doing</h1>
+      <p style="margin: 0; font-size: 15px; color: #6b6e76;">For the team, not the app. Runs traced in Amplitude, ranking tested in Statsig, rehearsals on simulated sites.</p>
+    </div>
+    <span style="font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 999px; background: #ecebe6; color: #111214;">Sample data</span>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+    <sc-for list="{{tiles}}" as="t" hint-placeholder-count="4">
+      <div style="background: #ffffff; border-radius: 18px; padding: 16px; box-shadow: 0 1px 2px rgba(17,18,20,.04), 0 10px 30px rgba(17,18,20,.08); display: flex; flex-direction: column; gap: 4px;">
+        <span style="font-size: 13px; color: #6b6e76;">{{t.label}}</span>
+        <span style="font-size: 32px; font-weight: 750; letter-spacing: -0.025em; font-variant-numeric: tabular-nums;">{{t.value}}</span>
+        <span style="font-size: 13px; color: #6b6e76;">{{t.note}}</span>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 16px;">
+    <div style="flex: 999 1 560px; min-width: 0; background: #ffffff; border-radius: 18px; padding: 16px; border: 1px solid #e6e4de; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap;">
+        <h3 style="margin: 0; font-size: 17px; font-weight: 700;">Ranking experiment</h3>
+        <span style="font-size: 13px; color: #6b6e76;">Share of For you picks people RSVP to</span>
+      </div>
+      <sc-for list="{{arms}}" as="a" hint-placeholder-count="2">
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <div style="display: flex; justify-content: space-between; font-size: 14px;">
+            <span style="font-weight: 650;">{{a.name}}</span>
+            <span style="font-variant-numeric: tabular-nums;">{{a.value}}</span>
+          </div>
+          <div style="height: 10px; border-radius: 999px; background: #ecebe6;"><div style="width: {{a.w}}; height: 10px; border-radius: 999px; background: {{a.c}};"></div></div>
+          <span style="font-size: 13px; color: #6b6e76;">{{a.how}}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="flex: 1 1 320px; min-width: 0; background: #ffffff; border-radius: 18px; padding: 16px; border: 1px solid #e6e4de; display: flex; flex-direction: column; gap: 10px;">
+      <h3 style="margin: 0; font-size: 17px; font-weight: 700;">Rehearsals on simulated sites</h3>
+      <sc-for list="{{sims}}" as="s" hint-placeholder-count="4">
+        <div style="display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: 1px solid #e6e4de; font-size: 14px;">
+          <span>{{s.name}}</span>
+          <span style="font-weight: 650; color: {{s.c}};">{{s.value}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="background: #ffffff; border-radius: 18px; padding: 0 16px; border: 1px solid #e6e4de; overflow-x: auto;">
+    <table style="width: 100%; min-width: 640px; border-collapse: collapse; font-size: 14px;">
+      <thead>
+        <tr style="text-align: left; color: #6b6e76; font-size: 13px;">
+          <th style="padding: 12px 8px 12px 0; font-weight: 650;">Run</th>
+          <th style="padding: 12px 8px; font-weight: 650;">Site</th>
+          <th style="padding: 12px 8px; font-weight: 650;">Steps</th>
+          <th style="padding: 12px 8px; font-weight: 650;">Model</th>
+          <th style="padding: 12px 8px; font-weight: 650;">Cost</th>
+          <th style="padding: 12px 0 12px 8px; font-weight: 650;">Outcome</th>
+        </tr>
+      </thead>
+      <tbody>
+        <sc-for list="{{runs}}" as="r" hint-placeholder-count="4">
+          <tr style="border-top: 1px solid #e6e4de;">
+            <td style="padding: 12px 8px 12px 0;">{{r.run}}</td>
+            <td style="padding: 12px 8px;">{{r.site}}</td>
+            <td style="padding: 12px 8px; font-variant-numeric: tabular-nums;">{{r.steps}}</td>
+            <td style="padding: 12px 8px;">{{r.model}}</td>
+            <td style="padding: 12px 8px; font-variant-numeric: tabular-nums;">{{r.cost}}</td>
+            <td style="padding: 12px 0 12px 8px;"><span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: {{r.bg}}; color: {{r.fg}};">{{r.out}}</span></td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const ok = { bg: '#e1f3e8', fg: '#1f7a46' };
+    const needs = { bg: '#ffecd8', fg: '#c2410c' };
+    return {
+      tiles: [
+        { label: 'Agent runs today', value: '128', note: 'RSVPs, cancels, waitlists and reads' },
+        { label: 'Confirmed on the site', value: '94%', note: 'Status read back after each action' },
+        { label: 'Handed to a person', value: '6', note: 'Codes, payments, human checks' },
+        { label: 'Cost per RSVP', value: '$0.07', note: 'Under each person’s daily limit' }
+      ],
+      arms: [
+        { name: 'New: memory and reranking', value: '18%', w: '72%', c: '#111214', how: 'Recall from memory, then rerank the top 40' },
+        { name: 'Old: word matching', value: '11%', w: '44%', c: '#9b9da4', how: 'Taste profile and word overlap' }
+      ],
+      sims: [
+        { name: 'Simulated Luma', value: '48 of 50', c: '#1f7a46' },
+        { name: 'Simulated Meetup', value: '45 of 50', c: '#1f7a46' },
+        { name: 'Full event, no waitlist', value: 'Stopped, as it should', c: '#1f7a46' },
+        { name: 'Paid event', value: 'Asked first, as it should', c: '#1f7a46' }
+      ],
+      runs: [
+        Object.assign({ run: 'RSVP · Agent builders night', site: 'Luma', steps: '5', model: 'Claude Haiku', cost: '$0.06', out: 'Going' }, ok),
+        Object.assign({ run: 'RSVP · Design systems dinner', site: 'Partiful', steps: '2', model: 'Claude Haiku', cost: '$0.03', out: 'Needs code' }, needs),
+        Object.assign({ run: 'Waitlist · Bouldering social', site: 'Meetup', steps: '4', model: 'Claude Haiku', cost: '$0.05', out: 'Waitlist' }, ok),
+        Object.assign({ run: 'Tag 30 new events', site: 'Catalog', steps: '1', model: 'Arcee', cost: '$0.01', out: 'Done' }, ok)
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

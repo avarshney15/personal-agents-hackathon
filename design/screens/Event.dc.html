@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Event sheet</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #6b6e76; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; color: #111214; display: flex; flex-direction: column; justify-content: flex-end;">
+  <div style="background: #f5f4f0; border-radius: 18px 18px 0 0; padding: 20px 16px 32px; display: flex; flex-direction: column; gap: 16px; height: 780px; box-sizing: border-box;">
+    <div style="width: 40px; height: 5px; border-radius: 999px; background: #e6e4de; align-self: center;"></div>
+    <div style="display: flex; gap: 14px; align-items: center;">
+      <div style="width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, hsl(150,72%,62%), hsl(190,66%,44%)); color: #ffffff; font-size: 20px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">AB</div>
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <h2 style="margin: 0; font-size: 22px; line-height: 1.2; font-weight: 700; letter-spacing: -0.015em;">Agent builders night</h2>
+        <span style="align-self: flex-start; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #e1f3e8; color: #1f7a46;">Strong match</span>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <sc-for list="{{meta}}" as="m" hint-placeholder-count="3">
+        <div style="display: flex; gap: 10px; align-items: center; font-size: 14px; color: #6b6e76;">
+          <span style="width: 16px; height: 16px; border-radius: 999px; border: 1.8px solid #6b6e76; box-sizing: border-box; flex-shrink: 0;"></span>
+          <span>{{m}}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="background: #ffffff; border-radius: 18px; padding: 14px 16px; border: 1px solid #e6e4de; display: flex; flex-direction: column; gap: 8px;">
+      <span style="font-size: 17px; font-weight: 700;">Why it fits you</span>
+      <span style="font-size: 14px; line-height: 1.45;">You went to 3 agent hackathons this autumn and skipped the talk-only ones. This one is hands-on, and you said AI agents lately.</span>
+      <a href="Memory.dc.html" style="font-size: 14px; font-weight: 600; color: #111214;">What the agent remembers</a>
+    </div>
+
+    <div style="background: #fcefd5; border-radius: 18px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px;">
+      <span style="font-size: 15px; font-weight: 700; color: #8f5300;">Clashes with &#8220;Call with Sam&#8221;</span>
+      <span style="font-size: 14px; line-height: 1.45;">6:00 to 7:00 in your calendar. You&#8217;d arrive about 30 minutes late.</span>
+    </div>
+
+    <span style="font-size: 14px; color: #6b6e76;">Dev, Priya and 4 others you know are going</span>
+
+    <div style="flex-grow: 1;"></div>
+    <a href="Rsvp.dc.html" style="height: 52px; border-radius: 999px; background: #111214; color: #ffffff; font-size: 16px; font-weight: 650; display: flex; align-items: center; justify-content: center; text-decoration: none;">RSVP</a>
+    <a href="https://luma.com" style="height: 52px; border-radius: 999px; background: #ecebe6; color: #111214; font-size: 16px; font-weight: 650; display: flex; align-items: center; justify-content: center; text-decoration: none;">Open on Luma</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { meta: ['Tuesday, Nov 24 · 6:30 to 9:30 pm', 'SoMa, San Francisco', 'Free · 80 going · hosted on Luma'] };
+  }
+}
+</script>
+</body>
+</html>

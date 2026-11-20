@@ -34,3 +34,16 @@ def test_fake_rsvp_walks_five_steps(monkeypatch):
                                  seen.append, lambda _: None)
     assert result.status == "done"
     assert [s.key for s in seen if s.state == "done"] == c.STEP_ORDER
+
+
+def test_calendar_fake_and_new_fields():
+    from datetime import datetime, timedelta, timezone
+
+    from app.extra.calendar_fake import FakeCalendar
+
+    cal = FakeCalendar()
+    assert isinstance(cal, c.Calendar)
+    now = datetime.now(timezone.utc)
+    assert cal.items("demo", now, now + timedelta(days=8))
+    assert c.User(id="u", name="n").spend_limit_usd == 2.0
+    assert c.RsvpResult(status="done").cost_usd == 0.0
