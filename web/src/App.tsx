@@ -74,9 +74,11 @@ export default function App() {
   const rsvp = useCallback(
     async (event: Event) => {
       rememberEvents([event])
+      // Replace, not push: the sheet hands over to Verify, then Verify to RSVP progress, so
+      // closing progress goes back to where the sheet was opened from.
       const toVerify = () => {
         sessionValue('pendingRsvp', event.id)
-        navigate({ name: 'verify' })
+        navigate({ name: 'verify' }, { replace: true })
       }
       if (!meRef.current?.verified) return toVerify()
       try {
@@ -118,6 +120,12 @@ export default function App() {
     },
     watched && !watchingHere ? 2000 : null,
   )
+
+  useEffect(() => {
+    if (!banner) return
+    const id = window.setTimeout(() => setBanner(null), 12000)
+    return () => window.clearTimeout(id)
+  }, [banner])
 
   const ctx: AppState | null = useMemo(
     () => (me ? { me, setMe, reloadMe, rsvp, watchRun } : null),
