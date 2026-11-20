@@ -30,3 +30,4 @@ frames/
 cognee_data/
 memory.db
 data/sie_cache.json
+backend/.venv-airbyte/
