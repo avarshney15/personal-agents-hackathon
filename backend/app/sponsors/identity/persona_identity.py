@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import logging
 import os
+from datetime import datetime
 from typing import Optional
 from urllib.parse import urlencode
 
@@ -80,6 +81,7 @@ class PersonaIdentity:
         )
         self._inquiry_by_user: dict[str, str] = {}
         self._user_by_inquiry: dict[str, str] = {}
+        self._passed_at: dict[str, datetime] = {}
 
     # ------------------------------------------------------------ Identity
 
@@ -106,9 +108,14 @@ class PersonaIdentity:
             return True
         try:
             inquiry_id = user.persona_inquiry_id or self._inquiry_by_user.get(user.id)
-            if inquiry_id:
-                return _status(self._get(inquiry_id)) in webhook.PASSED_STATUSES
-            return any(_status(i) in webhook.PASSED_STATUSES for i in self._list(user.id))
+            inquiries = [self._get(inquiry_id)] if inquiry_id else self._list(user.id)
+            passed = next((i for i in inquiries if _status(i) in webhook.PASSED_STATUSES), None)
+            if passed is None:
+                return False
+            when = webhook.passed_at(passed.get("attributes") or {})
+            if when:
+                self._passed_at[user.id] = when
+            return True
         except PersonaError as exc:
             log.warning("persona: status check failed for user %s: %s", user.id, exc)
             return False
@@ -126,17 +133,24 @@ class PersonaIdentity:
         parsed = webhook.parse_inquiry_event(event)
         if parsed is None:
             return None
-        name, inquiry_id, status, reference_id = parsed
+        name, inquiry_id, status, reference_id, when = parsed
         user_id = reference_id or self._user_by_inquiry.get(inquiry_id)
         verified = webhook.verdict(name, status)
         log.info("persona: webhook %s for inquiry %s (%s)", name, inquiry_id, status)
         if not user_id or verified is None:
             return None
         self._remember(user_id, inquiry_id)
+        if verified and when:
+            self._passed_at[user_id] = when
         return user_id, verified
 
     def disclosure(self, user: User) -> str:
         return DISCLOSURE_TEMPLATE.format(name=user.name)
+
+    def verified_at(self, user: User) -> Optional[datetime]:
+        """Not part of Identity: when Persona says the person passed (inquiry `completed-at`,
+        or `decisioned-at` if approved), as seen by the last status() or webhook. For User.verified_at."""
+        return self._passed_at.get(user.id)
 
     # ------------------------------------------------------------ helpers
 

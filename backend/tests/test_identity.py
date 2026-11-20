@@ -317,3 +317,38 @@ def test_fake_identity_still_works():
     assert fake.on_webhook({"raw_body": json.dumps({"user_id": "demo"}), "signature": "t=1,v1=x"}) == ("demo", True)
     assert fake.on_webhook({}) is None
     assert fake.disclosure(u) == c.DISCLOSURE_TEMPLATE.format(name="Maya Rao")
+
+
+# ---------------------------------------------------------------- verified_at (for User.verified_at)
+
+
+def test_verified_at_from_status_completed_and_approved(persona):
+    from datetime import datetime, timezone
+    persona.add("inq_c", "completed", "demo")
+    persona.inquiries["inq_c"]["attributes"]["completed-at"] = "2026-11-20T21:05:00.000Z"
+    identity = make(persona)
+    assert identity.verified_at(user(persona_inquiry_id="inq_c")) is None  # nothing seen yet
+    assert identity.status(user(persona_inquiry_id="inq_c")) is True
+    assert identity.verified_at(user()) == datetime(2026, 11, 20, 21, 5, tzinfo=timezone.utc)
+
+    persona.add("inq_a", "approved", "u2")
+    persona.inquiries["inq_a"]["attributes"].update(
+        {"completed-at": "2026-11-20T21:05:00Z", "decisioned-at": "2026-11-20T21:06:00Z"})
+    assert identity.status(user(id="u2")) is True
+    assert identity.verified_at(user(id="u2")) == datetime(2026, 11, 20, 21, 6, tzinfo=timezone.utc)
+
+
+def test_verified_at_from_webhook(persona):
+    from datetime import datetime, timezone
+    body = event("inquiry.completed", "completed")
+    body["data"]["attributes"]["payload"]["data"]["attributes"]["completed-at"] = "2026-11-20T21:05:00.000Z"
+    identity = make(persona)
+    assert identity.on_webhook(body) == ("demo", True)
+    assert identity.verified_at(user()) == datetime(2026, 11, 20, 21, 5, tzinfo=timezone.utc)
+
+
+def test_fake_verified_at():
+    fake = FakeIdentity()
+    assert fake.verified_at(user()) is None
+    fake.start(user())
+    assert fake.verified_at(user()) is not None

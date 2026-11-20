@@ -21,6 +21,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+from datetime import datetime
 from typing import Any, Mapping, Optional, Union
 
 SIGNATURE_HEADER = "Persona-Signature"
@@ -70,8 +71,8 @@ def unwrap(payload: Any, raw_body: Optional[Body] = None,
     return (payload if isinstance(payload, dict) else None), raw_body, signature
 
 
-def parse_inquiry_event(event: Optional[dict]) -> Optional[tuple[str, str, Optional[str], Optional[str]]]:
-    """-> (event name, inquiry id, status, reference id) for inquiry.* events, else None."""
+def parse_inquiry_event(event: Optional[dict]) -> Optional[tuple[str, str, Optional[str], Optional[str], Optional[datetime]]]:
+    """-> (event name, inquiry id, status, reference id, passed at) for inquiry.* events, else None."""
     if not isinstance(event, dict):
         return None
     data = event.get("data")
@@ -87,7 +88,7 @@ def parse_inquiry_event(event: Optional[dict]) -> Optional[tuple[str, str, Optio
     if not isinstance(inquiry_id, str):
         return None
     i_attrs = inquiry.get("attributes") if isinstance(inquiry.get("attributes"), dict) else {}
-    return name, inquiry_id, attr(i_attrs, "status"), attr(i_attrs, "reference-id")
+    return name, inquiry_id, attr(i_attrs, "status"), attr(i_attrs, "reference-id"), passed_at(i_attrs)
 
 
 def verdict(name: str, status: Optional[str]) -> Optional[bool]:
@@ -96,6 +97,18 @@ def verdict(name: str, status: Optional[str]) -> Optional[bool]:
         return True
     if status in FAILED_STATUSES or (status is None and name in FAILED_EVENTS):
         return False
+    return None
+
+
+def passed_at(attrs: Mapping) -> Optional[datetime]:
+    """When the inquiry passed: `decisioned-at` (approved) or `completed-at`, ISO 8601."""
+    for key in ("decisioned-at", "completed-at") if attr(attrs, "status") == "approved" else ("completed-at",):
+        value = attr(attrs, key)
+        if isinstance(value, str):
+            try:
+                return datetime.fromisoformat(value.replace("Z", "+00:00"))
+            except ValueError:
+                pass
     return None
 
 
