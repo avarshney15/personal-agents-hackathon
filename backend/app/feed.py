@@ -122,7 +122,7 @@ def event_why(user: User, event: Event) -> tuple[str, list[Fact], Optional[PickT
     memory, ranking, telemetry = registry.get_memory(), registry.get_ranking(), registry.get_telemetry()
     arm: Arm = telemetry.arm(user.id, "ranking")
     facts = _recall_many(memory, user.id, [event])[event.id]
-    positive = [f for f in facts if f.kind in POSITIVE and _fits_time(f, event)]
+    positive = [f for f in facts if f.kind in POSITIVE and _fits_event(f, event)]
     skip = facts[0] if facts and facts[0].kind in NEGATIVE else None
 
     events = _candidates()
@@ -134,18 +134,18 @@ def event_why(user: User, event: Event) -> tuple[str, list[Fact], Optional[PickT
 
     went = next((f for f in positive if f.kind == "went"), None)
     said = next((f for f in positive if f.kind == "said"), None)
-    used = [f for f in (went, said) if f is not None]
-    sentences: list[str] = []
+    parts: list[tuple[str, Optional[Fact]]] = []
     if skip is not None:
-        sentences.append(f"Heads up: {skip.text.rstrip('.')} ({_lower_first(skip.from_text.rstrip('.'))}).")
-        used.insert(0, skip)
+        parts.append((f"Heads up: {skip.text.rstrip('.')} ({_lower_first(skip.from_text.rstrip('.'))}).", skip))
+    elif not positive:
+        parts.append(("Nothing you've told the agent points here yet, so this is something new.", None))
     if went:
-        sentences.append(_fact_sentence(went))
-    sentences.append(_event_sentence(event, in_time))
+        parts.append((_fact_sentence(went, event), went))
+    parts.append((_event_sentence(event, in_time), None))
     if said:
-        sentences.append(_fact_sentence(said))
-    if not positive and skip is None:
-        sentences.insert(0, "Nothing you've told the agent points here yet, so this is something new.")
+        parts.append((_fact_sentence(said, event), said))
+    if len(parts) > 3:  # keep every quoted fact; drop the plain event sentence
+        parts = [pair for pair in parts if pair[1] is not None]
 
     if skip is not None:
         tag: Optional[PickTag] = None
@@ -153,7 +153,7 @@ def event_why(user: User, event: Event) -> tuple[str, list[Fact], Optional[PickT
         tag = "Strong match"
     else:
         tag = "Something new"
-    return " ".join(sentences[:3]), used, tag
+    return " ".join(s for s, _ in parts[:3]), [f for _, f in parts[:3] if f is not None], tag
 
 
 # ---------------------------------------------------------------- candidates and scoring
@@ -291,6 +291,17 @@ def _recall_one(memory: Memory, user_id: str, event: Event, version: Optional[st
 
 
 def _recall_many(memory: Memory, user_id: str, events: list[Event]) -> dict[str, list[Fact]]:
+    """One round trip via memory.recall_many when it exists (it caches); else recall per event, cached here."""
+    if not events:
+        return {}
+    batch = getattr(memory, "recall_many", None)
+    if callable(batch):
+        try:
+            found = batch(user_id, events, RECALL_K)
+            return {e.id: list(found.get(e.id, [])) for e in events}
+        except Exception as exc:
+            log.warning("memory.recall_many failed: %s", exc)
+            return {e.id: [] for e in events}
     version = _memory_version(memory, user_id)
     if RECALL_WORKERS <= 1 or len(events) <= 1:
         return {e.id: _recall_one(memory, user_id, e, version) for e in events}
@@ -320,7 +331,7 @@ def _rows(events: list[Event], scores: dict[str, float], facts: dict[str, list[F
         recalled = facts.get(event.id, [])
         penalized = bool(recalled) and recalled[0].kind in NEGATIVE
         score = (taste + (TIME_BOOST if in_time else 0.0)) * (SKIP_PENALTY if penalized else 1.0)
-        positive = [f for f in recalled if f.kind in POSITIVE and _fits_time(f, event)]
+        positive = [f for f in recalled if f.kind in POSITIVE and _fits_event(f, event)]
         rows.append(_Row(event, score, taste, positive, penalized, in_time))
     rows.sort(key=lambda r: -r.score)  # stable: ties stay soonest first
     return rows
@@ -334,11 +345,11 @@ def _make_picks(rows: list[_Row], arm: Arm, weak: PickTag, topic: str = "") -> l
         why_fact: Optional[Fact] = None
         if fact is not None and not row.penalized and row.taste >= STRONG_MIN:
             tag: PickTag = "Strong match"
-            why_fact, why = fact, _fact_sentence(fact)
+            why_fact, why = fact, _fact_sentence(fact, row.event)
         elif weak == "Match":
             tag = "Match"
             if fact is not None and not row.penalized:
-                why_fact, why = fact, _fact_sentence(fact)
+                why_fact, why = fact, _fact_sentence(fact, row.event)
             else:
                 why = _plain_match(row.event, topic, row.in_time)
         else:
@@ -356,12 +367,19 @@ _VERBS = {"likes": "like", "loves": "love", "follows": "follow", "prefers": "pre
 _PAST = ("went", "attended", "joined", "rsvped", "rsvp'd", "skipped", "liked", "loved")
 
 
-def _fact_sentence(fact: Fact) -> str:
-    """Quotes a fact in the canvas's voice, e.g. 'You said climbing and AI agents lately.'"""
+def _fact_sentence(fact: Fact, event: Optional[Event] = None) -> str:
+    """Quotes a fact in the canvas's voice, e.g. 'You said AI agents lately.'"""
     text = fact.text.strip().rstrip(".")
     if fact.kind == "said":
-        m = re.match(r"into\s+(.+)", text, flags=re.I)
-        return f"You said {m.group(1)}." if m else f"You said “{text}.”"
+        m = re.match(r"into\s+(.+?)(\s+lately)?$", text, flags=re.I)
+        if not m:
+            return f"You said “{text}.”"
+        topics = [t.strip() for t in re.split(r",\s*|\s+and\s+", m.group(1)) if t.strip()]
+        if event is not None:
+            # "Into climbing and AI agents lately" on an AI event reads "You said AI agents lately."
+            relevant = [t for t in topics if _words(t) & _words(_event_blob(event))]
+            topics = relevant or topics
+        return f"You said {_join_plain(topics)}{m.group(2) or ''}."
     first, _, rest = text.partition(" ")
     verb = _VERBS.get(first.lower())
     if verb and rest:
@@ -393,6 +411,41 @@ _TIME_WORDS = {"weekend", "weekday", "weeknight", "morning", "afternoon", "eveni
 def _time_words(text: str) -> set[str]:
     words = {w[:-1] if w.endswith("s") else w for w in re.findall(r"[a-z]+", text.lower())}
     return words & _TIME_WORDS
+
+
+_GENERIC = {"sf", "san", "francisco", "the", "and", "for", "from", "with", "event", "events", "community",
+            "host", "hosts", "hosted", "by", "of", "a", "an", "in", "on", "at", "to", "into", "lately"}
+
+
+def _stem_word(word: str) -> str:
+    if len(word) > 5 and word.endswith("ing"):
+        return word[:-3]
+    if len(word) > 3 and word.endswith("s") and not word.endswith("ss"):
+        return word[:-1]
+    return word
+
+
+def _words(text: str) -> set[str]:
+    return {_stem_word(w) for w in re.findall(r"[a-z0-9]+", text.lower()) if w not in _GENERIC}
+
+
+def _event_blob(event: Event) -> str:
+    return f"{event.title} {event.description} {' '.join(event.tags)} {event.host}"
+
+
+def _join_plain(items: list[str]) -> str:
+    return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
+
+
+def _fits_event(fact: Fact, event: Event) -> bool:
+    """Only quote a fact that's true of this event: right time of week, and right host if it names one."""
+    if not _fits_time(fact, event):
+        return False
+    m = re.search(r"\bhost(?:s|ed)?\s+(?:from|by)?\s*(.+)$", fact.text.strip().rstrip("."), flags=re.I)
+    if m:
+        named = _words(m.group(1))
+        return bool(named) and named <= _words(event.host)
+    return True
 
 
 def _fits_time(fact: Fact, event: Event) -> bool:

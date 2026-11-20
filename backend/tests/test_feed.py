@@ -29,10 +29,27 @@ class CountingMemory(FakeMemory):
     def __init__(self) -> None:
         super().__init__()
         self.recalls = 0
+        self.batches = 0
 
     def recall(self, user_id, event, k=3):
         self.recalls += 1
         return super().recall(user_id, event, k)
+
+    def recall_many(self, user_id, events, k=3):
+        self.batches += 1
+        return super().recall_many(user_id, events, k)
+
+
+class NoBatchMemory:
+    """A Memory without recall_many: the feed recalls per event and caches."""
+
+    def __init__(self, inner: CountingMemory) -> None:
+        self.inner = inner
+
+    def __getattr__(self, name):
+        if name == "recall_many":
+            raise AttributeError(name)
+        return getattr(self.inner, name)
 
 
 class FixedArm(FakeTelemetry):
@@ -91,6 +108,10 @@ def fact_by_id(memory: FakeMemory, user_id: str, fact_id: str) -> c.Fact:
 
 
 def quotes(why: str, fact: c.Fact) -> bool:
+    m = re.match(r"Into (.+?)( lately)?$", fact.text)
+    if fact.kind == "said" and m:  # "Into climbing and AI agents lately" may be quoted per topic
+        topics = re.split(r",\s*| and ", m.group(1))
+        return "You said " in why and any(t.lower() in why.lower() for t in topics)
     core = fact.text.split(" ", 1)[1] if " " in fact.text else fact.text
     return core.lower() in why.lower()
 
@@ -139,7 +160,7 @@ def test_why_lines_quote_real_facts(world):
     for pick in strong:
         assert pick.why_fact_id
     bouldering = next(p for p in resp.picks if p.event.id == "fake-bouldering")
-    assert bouldering.why == "You said climbing and AI agents lately."
+    assert bouldering.why == "You said climbing lately."  # the canvas line, only the topic that matches
     assert len({p.why for p in strong}) == len(strong)  # different facts for different picks
 
 
@@ -173,16 +194,44 @@ def test_add_into_remembers_and_merges_chips(world):
     assert len(world.telemetry.events) == count
 
 
-def test_recall_is_cached_until_memory_changes(world):
+def test_feed_recalls_in_one_batch(world):
+    user = demo_user()
+    feed.build_feed(user)
+    assert world.memory.batches == 1
+    feed.ask(user, "AI agents")
+    assert world.memory.batches == 2
+
+
+def test_recall_without_recall_many_is_cached_until_memory_changes(world, monkeypatch):
+    plain = NoBatchMemory(world.memory)
+    monkeypatch.setattr(registry, "get_memory", lambda: plain)
     user = demo_user()
     feed.build_feed(user)
     first = world.memory.recalls
-    assert first > 0
+    assert first > 0 and world.memory.batches == 0
     feed.build_feed(user)
     assert world.memory.recalls == first
     feed.add_into(user, "climbing")
     feed.build_feed(user)
     assert world.memory.recalls > first
+
+
+def test_no_climbing_quote_without_climbing_events(world):
+    world.catalog = ListCatalog([e for e in FakeCatalog().events() if e.id != "fake-bouldering"] + [
+        _ev("fastmcp", "FastMCP Meetup", _at(_next_monday(), 18), 70, "Talks on MCP servers for AI agents.",
+            ["AI agents", "talks"]).model_copy(update={"host": "Prefect"}),
+    ])
+    user = demo_user()
+    user.into = feed.add_into(user, "climbing and AI agents lately")
+    resp = feed.build_feed(user)
+    assert order(resp)[:2] == ["fake-agent-builders", "fake-evals-workshop"] or order(resp)[-1] == "fake-ceramics"
+    assert order(resp).index("fake-ceramics") > order(resp).index("fastmcp")
+    assert all("climbing" not in p.why.lower() for p in resp.picks)
+    assert "You said AI agents lately." in {p.why for p in resp.picks}
+    fastmcp = next(p for p in resp.picks if p.event.id == "fastmcp")
+    assert "Agent Builders SF" not in fastmcp.why  # that fact names a different host
+    why, facts, _ = feed.event_why(user, world.catalog.get("fastmcp"))
+    assert "Agent Builders SF" not in why and "climbing" not in why.lower()
 
 
 def _at(day: date, hour: int, minute: int = 0) -> datetime:
