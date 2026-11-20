@@ -2,7 +2,8 @@
 import { getOps } from './data'
 import { pct, usd } from './format'
 import type { ArmStat, OpsSummary } from './types'
-import { ErrorLine, Loading, StatusPill, useLoad } from './ui'
+import { ErrorLine, Loading, StatusPill } from './ui'
+import { useLoad } from './useLoad'
 import './features.css'
 
 function tiles(o: OpsSummary) {

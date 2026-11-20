@@ -1,27 +1,7 @@
 // Pieces only the Part 9 screens need. Shared ones (Icon, Logo, Tile, Pill, RoundButton,
 // BackButton) come from web/src/ui.tsx.
-import { useCallback, useEffect, useState } from 'react'
-import { errorText } from '../errors'
 import type { Tone as PillTone } from '../ui'
-import type { PickTag, Site, Tone, WeekStatus } from './types'
-
-// ---------------------------------------------------------------- tone maps (as drawn)
-
-export const WEEK_STATUS: Record<WeekStatus, { label: string; tone: PillTone }> = {
-  going: { label: 'Going', tone: 'going' },
-  waitlist: { label: 'Waitlist', tone: 'wait' },
-  invited: { label: 'Invited', tone: 'invited' },
-  pending: { label: 'Pending', tone: 'pending' },
-}
-
-/** Ask.dc.html: Strong match on going-bg, Match on surface-2. Something new borrows invited. */
-export const TAG_TONE: Record<PickTag, PillTone> = {
-  'Strong match': 'going',
-  Match: 'quiet',
-  'Something new': 'invited',
-}
-
-export const RESULT_TONE: Record<Tone, PillTone> = { ok: 'going', wait: 'wait', needs: 'needs' }
+import type { Site } from './types'
 
 /** A small status pill with the canvas's colours. */
 export function StatusPill({ tone, children }: { tone: PillTone; children: string }) {
@@ -67,33 +47,6 @@ export const SendIcon = () => (
 )
 
 // ---------------------------------------------------------------- loading
-
-export type Load<T> =
-  | { state: 'loading' }
-  | { state: 'error'; message: string }
-  | { state: 'ready'; data: T }
-
-/** Runs `fn` (a stable data call) on mount; `reload` runs it again; `set` replaces the data. */
-export function useLoad<T>(fn: () => Promise<T>) {
-  const [load, setLoad] = useState<Load<T>>({ state: 'loading' })
-  const [call] = useState(() => fn)
-
-  const reload = useCallback(() => {
-    let live = true
-    call().then(
-      (data) => live && setLoad({ state: 'ready', data }),
-      (err) => live && setLoad({ state: 'error', message: errorText(err) }),
-    )
-    return () => {
-      live = false
-    }
-  }, [call])
-
-  useEffect(() => reload(), [reload])
-
-  const set = useCallback((data: T) => setLoad({ state: 'ready', data }), [])
-  return { load, reload, set }
-}
 
 export function Loading({ label }: { label: string }) {
   return (

@@ -4,7 +4,8 @@ import { errorText } from '../errors'
 import { useNav } from '../nav'
 import { connectCalendar, connectSite, disconnectSite, getCalendar, getSites } from './data'
 import type { CalendarStatus, Site, SiteConnection } from './types'
-import { CalendarIcon, ErrorLine, Loading, SiteIcon, useLoad } from './ui'
+import { CalendarIcon, ErrorLine, Loading, SiteIcon } from './ui'
+import { useLoad } from './useLoad'
 import './features.css'
 
 function siteState(s: SiteConnection): string {

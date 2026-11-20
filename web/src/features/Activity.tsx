@@ -3,7 +3,9 @@ import { useNav } from '../nav'
 import { getActivity } from './data'
 import { usd } from './format'
 import type { ActivityItem } from './types'
-import { ErrorLine, Loading, RESULT_TONE, StatusPill, useLoad } from './ui'
+import { RESULT_TONE } from './tones'
+import { ErrorLine, Loading, StatusPill } from './ui'
+import { useLoad } from './useLoad'
 import './features.css'
 
 function Row({ item, onOpen }: { item: ActivityItem; onOpen?: () => void }) {

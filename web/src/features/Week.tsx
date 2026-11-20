@@ -4,7 +4,9 @@ import { RoundButton, Tile } from '../ui'
 import { getWeek } from './data'
 import { weekMeta, weekday } from './format'
 import type { Clash, WeekDay, WeekItem } from './types'
-import { ErrorLine, Loading, StatusPill, WEEK_STATUS, useLoad } from './ui'
+import { WEEK_STATUS } from './tones'
+import { ErrorLine, Loading, StatusPill } from './ui'
+import { useLoad } from './useLoad'
 import './features.css'
 
 function clashDay(clash: Clash, days: WeekDay[]): string {

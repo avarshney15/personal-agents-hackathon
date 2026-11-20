@@ -8,7 +8,8 @@ import { ask } from './data'
 import { askMeta } from './format'
 import { SAMPLE_QUERY } from './samples'
 import type { AskResponse } from './types'
-import { ErrorLine, SendIcon, StatusPill, TAG_TONE } from './ui'
+import { TAG_TONE } from './tones'
+import { ErrorLine, SendIcon, StatusPill } from './ui'
 import './features.css'
 
 // The last answer, so coming back from an Event sheet shows it again.
