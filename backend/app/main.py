@@ -18,7 +18,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from app import registry, worker
-from app.contracts import AskBefore, Event, FactGroups, FeedResponse, RsvpRun, User, VerifySession
+from app.contracts import AskBefore, Event, Fact, FactGroups, FeedResponse, RsvpRun, User, VerifySession
 from app.demo import demo_user, seed_demo_memory
 from app.deps import USER_COOKIE, current_user
 from app.store import get_store
@@ -289,6 +289,57 @@ def cancel_rsvp(run_id: str) -> RsvpRun:
 
 
 # ---------------------------------------------------------------- memory
+
+
+# ---------------------------------------------------------------- profile (form-filling facts)
+
+PROFILE_FROM = "Your profile"
+PROFILE_LABELS = {"github": "GitHub", "linkedin": "LinkedIn", "website": "Website",
+                  "title": "Job title", "company": "Company", "school": "School",
+                  "location": "Location", "phone": "Phone", "bio": "About me"}
+
+
+class ProfileBody(BaseModel):
+    github: Optional[str] = None
+    linkedin: Optional[str] = None
+    website: Optional[str] = None
+    title: Optional[str] = None
+    company: Optional[str] = None
+    school: Optional[str] = None
+    location: Optional[str] = None
+    phone: Optional[str] = None
+    bio: Optional[str] = None
+
+
+def _profile_facts(user: User) -> dict[str, Fact]:
+    out = {}
+    for fact in registry.get_memory().facts(user.id).said:
+        if fact.from_text == PROFILE_FROM and ":" in fact.text:
+            out[fact.text.split(":", 1)[0].strip()] = fact
+    return out
+
+
+@app.get("/api/profile")
+def get_profile(user: User = Depends(current_user)) -> dict:
+    """The profile facts the RSVP agent uses to fill registration forms (stored in Cognee)."""
+    facts = _profile_facts(user)
+    return {key: facts[label].text.split(":", 1)[1].strip() if label in facts else None
+            for key, label in PROFILE_LABELS.items()}
+
+
+@app.put("/api/profile")
+def put_profile(body: ProfileBody, user: User = Depends(current_user)) -> dict:
+    """Saves each given field as one memory ("GitHub: https://..."), replacing the old one.
+    An empty string forgets that field."""
+    memory, facts = registry.get_memory(), _profile_facts(user)
+    for key, value in body.model_dump(exclude_none=True).items():
+        label = PROFILE_LABELS[key]
+        if label in facts:
+            memory.forget(user.id, facts[label].id)
+        if value.strip():
+            memory.remember(user.id, "said", f"{label}: {value.strip()}", PROFILE_FROM)
+    _track(user.id, "profile_saved", {"fields": sorted(body.model_dump(exclude_none=True))})
+    return get_profile(user)
 
 
 @app.get("/api/memory", response_model=FactGroups)

@@ -224,11 +224,15 @@ def test_paid_event_stops_at_step_one(tmp_path, site):
     assert site.registered == []
 
 
-def test_host_questions_stop_at_step_one(tmp_path, site):
+def test_host_questions_no_longer_stop_at_step_one(tmp_path, site):
+    """The agent answers host questions from the person's profile, so step 1 passes and Claude
+    gets the form (with the profile in its instructions)."""
     out = run(tmp_path, site, "questions")
-    assert_handed_back(out, "checked", "choice")
-    assert "questions" in out.result.stop_reason
-    assert out.client.messages.calls == []
+    states = final(out.steps)
+    assert states["checked"][0] == "done"
+    assert "answers from your profile" in states["checked"][1]
+    assert out.client.messages.calls, "Claude should be asked to fill the form"
+    assert "About the person" in out.client.messages.calls[0]["system"]
 
 
 def test_full_event_without_waitlist_stops(tmp_path, site):
@@ -407,7 +411,8 @@ def test_event_fields_alone_can_stop():
     scan = {"text": "", "buttons": ["Register"], "fields": []}
     base = dict(id="e", title="t", starts_at=datetime(2026, 11, 24), url="https://lu.ma/x")
     assert pc.check_event(scan, c.Event(**base, free=False)).reason == pc.STOP_PAID
-    assert pc.check_event(scan, c.Event(**base, has_questions=True)).reason == pc.STOP_QUESTIONS
+    asks = pc.check_event(scan, c.Event(**base, has_questions=True))
+    assert asks.reason is None and asks.questions  # answered from the profile, not a stop
     assert pc.check_event(scan, c.Event(**base)).ok
     assert pc.check_event({**scan, "text": "You're going"}, c.Event(**base)).already_going
 
@@ -433,7 +438,8 @@ def test_luma_page_data_decides(tmp_path):
     free = {"is_free": True, "is_sold_out": False, "spots_remaining": None}
     assert pc.check_event(scan(free), ev).ok
     assert pc.check_event(scan({**free, "is_free": False}), ev).reason == pc.STOP_PAID
-    assert pc.check_event(scan(free, [{"label": "LinkedIn?"}]), ev).reason == pc.STOP_QUESTIONS
+    asks = pc.check_event(scan(free, [{"label": "LinkedIn?"}]), ev)
+    assert asks.reason is None and asks.questions
     assert pc.check_event(scan({**free, "is_sold_out": True}, buttons=["Join Waitlist"]),
                           ev).waitlist
     assert pc.check_event(scan({**free, "spots_remaining": 0}), ev).reason == pc.STOP_FULL

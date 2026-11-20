@@ -99,6 +99,7 @@ class EventCheck:
     already_going: Optional[str] = None  # status text when the page already shows we're in
     inconclusive: bool = False  # no blocker found but no register button either
     waitlist: bool = False  # full, but Luma offers a waitlist: join it
+    questions: bool = False  # the host asks questions: the agent answers them from the profile
 
 
 def _bfs(obj: Any) -> Iterator[dict]:
@@ -173,14 +174,14 @@ def going_status(scan: dict) -> Optional[str]:
 
 
 def check_event(scan: dict, event: Event) -> EventCheck:
-    """Step 1: free, spots left (or a waitlist), no host questions.
+    """Step 1: free, and spots left (or a waitlist). Host questions don't stop it: the agent
+    answers them from the person's profile in Cognee (see browser_agent.SYSTEM_PROMPT).
 
     Order of trust: the catalog's event fields, Luma's own page data, schema.org offers, then
     button labels and short status lines on the page."""
     if not event.free:
         return EventCheck(False, STOP_PAID)
-    if event.has_questions:
-        return EventCheck(False, STOP_QUESTIONS)
+    questions = event.has_questions
 
     status = going_status(scan)
     if status:
@@ -203,8 +204,7 @@ def check_event(scan: dict, event: Event) -> EventCheck:
     full = full or event.spots_left == 0
     if paid:
         return EventCheck(False, STOP_PAID)
-    if questions_data:
-        return EventCheck(False, STOP_QUESTIONS)
+    questions = questions or bool(questions_data)
 
     # A login-code prompt (step 2 handles it) hides the form, so skip the field checks then.
     asking_code = code_prompt(scan)
@@ -212,17 +212,16 @@ def check_event(scan: dict, event: Event) -> EventCheck:
         f for f in scan.get("fields", [])
         if not NOTE_FIELD.search(f.get("label", "") + " " + f.get("name", ""))
         and not IDENTITY_FIELD.search(f.get("label", "") + " " + f.get("name", ""))]
-    if asked:
-        return EventCheck(False, STOP_QUESTIONS)
+    questions = questions or bool(asked)
 
     if full:
         if any(WAITLIST_BUTTON.search(b) for b in buttons):
-            return EventCheck(True, waitlist=True)
+            return EventCheck(True, waitlist=True, questions=questions)
         return EventCheck(False, STOP_FULL)
 
     if asking_code or any(REGISTER_BUTTON.search(b) for b in buttons):
-        return EventCheck(True)
-    return EventCheck(True, inconclusive=True)
+        return EventCheck(True, questions=questions)
+    return EventCheck(True, inconclusive=True, questions=questions)
 
 
 def code_prompt(scan: dict) -> bool:
