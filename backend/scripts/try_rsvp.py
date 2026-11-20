@@ -89,9 +89,13 @@ def main() -> int:
     print(f"event: {event.title} ({event.url})")
     agent = BrowserRsvpAgent(profile_dir=args.profile, headless=False if args.headed else None,
                              model=args.model)
-    print(f"model {agent.model} · profile {Path(agent.profile_dir).resolve()} · "
-          f"headless {agent.headless} · max {agent.max_actions} actions / "
-          f"{int(agent.max_seconds)} s")
+    if agent.browser == "chrome":
+        from app.act import chrome_app
+        where = f"Chrome app · profile {chrome_app.profile_dir()}"
+    else:
+        where = f"Chromium · profile {Path(agent.profile_dir).resolve()} · headless {agent.headless}"
+    print(f"user {user.name} · model {agent.model} · {where} · "
+          f"max {agent.max_actions} actions / {int(agent.max_seconds)} s")
     result = agent.run("try", user, event, DISCLOSURE_TEMPLATE.format(name=user.name),
                        on_step, on_frame, ask_user)
     print(f"\nresult: {result.model_dump_json(indent=2)}")
