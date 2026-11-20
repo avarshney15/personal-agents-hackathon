@@ -191,7 +191,8 @@ def test_calendar_connect(env, monkeypatch):
     assert env.client.get("/api/calendar", headers=h).json()["source"] == "Google Calendar"
 
 
-def test_fake_calendar_anchors_call_to_agent_builders():
+def test_fake_calendar_anchors_call_to_agent_builders(monkeypatch):
+    monkeypatch.setattr(registry, "get_catalog", lambda: FakeCatalog())
     event = FakeCatalog().get("fake-agent-builders")
     cal = FakeCalendar()
     items = cal.items("demo", event.starts_at - timedelta(days=1), event.starts_at + timedelta(days=1))
@@ -213,7 +214,7 @@ def test_taste_saves_text_chips_and_times(env):
     assert r.status_code == 200
     feed = c.FeedResponse.model_validate(r.json())
     assert sorted(x.lower() for x in feed.into) == ["ai agents", "climbing", "hackathons"]
-    assert env.feed.calls == [("add_into", body["text"]), ("add_into", "Hackathons")]
+    assert env.feed.calls == [("add_into", body["text"] + "\nHackathons")]
     user = env.store.get_user("demo")
     assert user.usual_times == ["Weekday evenings"]
     said = [f.text for f in env.memory.facts("demo").said]

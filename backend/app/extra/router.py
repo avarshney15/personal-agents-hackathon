@@ -225,21 +225,17 @@ def _remember_times(user: User, times: list[str]) -> None:
 def save_taste(body: TasteRequest, user: User = Depends(current_user)) -> FeedResponse:
     feed = data.feed()
     text = body.text.strip()
-    from_text: list[str] = []
-    if text:
-        from_text = list(feed.add_into(user, text) or [])
-        user = data.get_user(user.id) or user
-
-    covered = {c.lower() for c in [*user.into, *from_text]}
     tapped = _merge([], body.chips)
+    covered = {c.lower() for c in user.into}
     extra = [c for c in tapped if c.lower() not in covered]
-    unsaid = [c for c in extra if c.lower() not in text.lower()]  # not in their own words: remember them too
-    from_chips: list[str] = []
-    if unsaid:
-        from_chips = list(feed.add_into(user, ", ".join(unsaid)) or [])
+    unsaid = [c for c in extra if c.lower() not in text.lower()]  # tapped, not in their own words
+    said = "\n".join(part for part in (text, ", ".join(unsaid)) if part)  # one memory write, one read
+    from_feed: list[str] = []
+    if said:
+        from_feed = list(feed.add_into(user, said) or [])
         user = data.get_user(user.id) or user
 
-    into = _merge(user.into, [*from_text, *extra, *from_chips])
+    into = _merge(user.into, [*from_feed, *extra])
     if into != user.into:
         user = data.set_into(user, into)
 

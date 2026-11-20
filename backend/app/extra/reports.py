@@ -85,7 +85,7 @@ def _result(run: RsvpRun) -> tuple[str, str]:
 
 
 def _model(model: Optional[str]) -> str:
-    if not model:
+    if not model or model.lower() in ("fake", "simulated", "sim"):
         return "Simulated"
     low = model.lower()
     for name in ("haiku", "sonnet", "opus"):

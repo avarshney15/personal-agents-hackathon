@@ -3,7 +3,8 @@
 The call sits on the coming Tuesday (the canvas's Nov 24), unless the loaded catalog has an
 upcoming "Agent builders" event (DEMO_CALENDAR_ANCHOR; empty turns this off) in the next 8 days:
 then it moves to half an hour before that event's start, so the Week and Event screens show the
-canvas's clash ("You'd arrive about 30 minutes late") whichever catalog is loaded.
+canvas's clash ("You'd arrive about 30 minutes late"). With the seeded SF catalog there is no such
+event, and the Tuesday call clashes with that evening's real events.
 Events the agent adds ("Added to your calendar") are kept apart and never clash with themselves.
 """
 
@@ -32,8 +33,7 @@ def _anchor_event(title_part: str) -> Optional[Event]:
     """Soonest upcoming event (next 8 days) whose title contains `title_part`."""
     try:
         from app import registry
-        from app.catalog.fake import FakeCatalog
-        events = list(registry.get_catalog().events()) + FakeCatalog().events()
+        events = list(registry.get_catalog().events())
     except Exception:
         return None
     now = datetime.now(timezone.utc)
