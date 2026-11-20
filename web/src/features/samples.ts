@@ -1,21 +1,17 @@
 // Canvas sample data the shared mock (web/src/mock.ts) lacks: the Week, Ask, Activity and Ops
 // screens exactly as drawn in design/screens/*.dc.html (each screen's renderVals()).
+// Mock mode only: live mode never shows these (see ./data).
 // Dates are relative to today in Pacific time, so "Today" stays today.
 // Agent builders night and Bouldering social reuse the shared mock's event ids, so the
 // Event sheet opens for them in mock mode.
 import type {
   ActivityResponse,
   AskResponse,
-  CalendarStatus,
   Event,
-  FeedResponse,
   OpsSummary,
   Pick,
   PickTag,
   Site,
-  SiteConnection,
-  TasteRequest,
-  User,
   WeekResponse,
 } from './types'
 
@@ -99,47 +95,6 @@ const TUE = () => aheadTo(2)
 const WED = () => aheadTo(3)
 const THU = () => aheadTo(4)
 const SAT = () => aheadTo(6)
-
-// ---------------------------------------------------------------- Connect, Welcome, Taste (live-mode fallbacks)
-
-export const user = (email = SAMPLE_EMAIL): User => ({
-  id: 'demo',
-  name: 'Maya R.',
-  verified: false,
-  persona_inquiry_id: null,
-  into: [...SAMPLE_CHIPS],
-  email,
-  usual_times: [...SAMPLE_TIMES],
-  spend_limit_usd: 2,
-  ask_before: 'paid',
-  verified_at: null,
-})
-
-let sitesState: SiteConnection[] = [
-  { site: 'luma', name: 'Luma', connected: true, event_count: 14 },
-  { site: 'partiful', name: 'Partiful', connected: true, event_count: 3 },
-  { site: 'meetup', name: 'Meetup', connected: false, event_count: 0 },
-  { site: 'eventbrite', name: 'Eventbrite', connected: false, event_count: 0 },
-]
-let calendarState: CalendarStatus = { connected: false, source: 'Google Calendar' }
-
-export const sites = (): SiteConnection[] => sitesState.map((s) => ({ ...s }))
-
-export function setSite(site: Site, connected: boolean): SiteConnection {
-  sitesState = sitesState.map((s) =>
-    s.site === site ? { ...s, connected, event_count: connected ? s.event_count || 6 : 0 } : s,
-  )
-  return { ...sitesState.find((s) => s.site === site)! }
-}
-
-export const calendar = (): CalendarStatus => ({ ...calendarState })
-
-export function connectCalendar(): CalendarStatus {
-  calendarState = { connected: true, source: 'Google Calendar' }
-  return { ...calendarState }
-}
-
-export const taste = (req: TasteRequest): FeedResponse => ({ picks: [], into: req.chips, arm: 'sie' })
 
 // ---------------------------------------------------------------- Week
 

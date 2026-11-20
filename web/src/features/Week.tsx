@@ -35,7 +35,7 @@ function EventRow({ item, onOpen }: { item: WeekItem; onOpen: () => void }) {
 
 export function WeekScreen() {
   const { navigate } = useNav()
-  const { load, reload } = useLoad(getWeek)
+  const { load, reload } = useLoad(getWeek, 'Couldn’t load your week.')
 
   return (
     <main className="screen ft-screen ft-screen--list" aria-labelledby="ft-week-title" aria-busy={load.state === 'loading'}>

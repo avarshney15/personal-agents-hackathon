@@ -1,29 +1,36 @@
 // Loads data for a screen once, with reload and in-place updates.
 import { useCallback, useEffect, useState } from 'react'
-import { errorText } from '../errors'
+import { failText } from './fail'
 
 export type Load<T> =
   | { state: 'loading' }
   | { state: 'error'; message: string }
   | { state: 'ready'; data: T }
 
-/** Runs `fn` (a stable data call) on mount; `reload` runs it again; `set` replaces the data. */
-export function useLoad<T>(fn: () => Promise<T>) {
+/** Runs `fn` (a stable data call) on mount; `reload` runs it again; `set` replaces the data.
+ *  On failure the screen shows `failMessage` (or the server's own detail for a 4xx). */
+export function useLoad<T>(fn: () => Promise<T>, failMessage: string) {
   const [load, setLoad] = useState<Load<T>>({ state: 'loading' })
   const [call] = useState(() => fn)
 
-  const reload = useCallback(() => {
+  const run = useCallback(() => {
     let live = true
     call().then(
       (data) => live && setLoad({ state: 'ready', data }),
-      (err) => live && setLoad({ state: 'error', message: errorText(err) }),
+      (err) => live && setLoad({ state: 'error', message: failText(err, failMessage) }),
     )
     return () => {
       live = false
     }
-  }, [call])
+  }, [call, failMessage])
 
-  useEffect(() => reload(), [reload])
+  useEffect(() => run(), [run])
+
+  // Try again: show the loading line, then run once more.
+  const reload = useCallback(() => {
+    setLoad({ state: 'loading' })
+    run()
+  }, [run])
 
   const set = useCallback((data: T) => setLoad({ state: 'ready', data }), [])
   return { load, reload, set }

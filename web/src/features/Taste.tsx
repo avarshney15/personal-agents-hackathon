@@ -2,9 +2,9 @@
 import { useContext, useEffect, useState } from 'react'
 import { apiMode } from '../api'
 import { AppContext } from '../app-state'
-import { errorText } from '../errors'
 import { useNav } from '../nav'
 import { getMe, saveTaste } from './data'
+import { failText } from './fail'
 import { SAMPLE_CHIPS, SAMPLE_TASTE, SAMPLE_TIMES } from './samples'
 import { ErrorLine } from './ui'
 import './features.css'
@@ -81,7 +81,7 @@ export function TasteScreen() {
       void app?.reloadMe().catch(() => undefined)
       navigate({ name: 'week' })
     } catch (err) {
-      setError(errorText(err))
+      setError(failText(err, 'Couldn’t save that. Try again.'))
       setBusy(false)
     }
   }
