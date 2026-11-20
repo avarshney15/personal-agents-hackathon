@@ -1,1 +1,4 @@
 # Part-owned: add this part's own dependencies below
+# Hosted Chrome for the RSVP agent. After installing, run:
+#   .venv/bin/python -m playwright install chromium
+playwright>=1.47
