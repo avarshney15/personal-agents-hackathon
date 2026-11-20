@@ -62,7 +62,7 @@ export function AskScreen() {
   const shown = pending ?? answer?.query ?? null
 
   return (
-    <main className="ft-screen ft-screen--ask" aria-labelledby="ft-ask-title">
+    <main className="screen ft-screen ft-screen--ask" aria-labelledby="ft-ask-title">
       <div className="ft-backbar">
         <BackButton />
         <h1 id="ft-ask-title" className="ft-sheet-title">
@@ -124,7 +124,7 @@ export function AskScreen() {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
         />
-        <button type="submit" className="ft-send" aria-label="Send" disabled={pending !== null || !draft.trim()}>
+        <button type="submit" className="ft-send" aria-label="Send" disabled={pending !== null}>
           <SendIcon />
         </button>
       </form>

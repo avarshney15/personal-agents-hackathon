@@ -58,11 +58,15 @@ export async function saveTaste(req: TasteRequest) {
 
 // ---------------------------------------------------------------- Week
 
+// The shared mock seeds two finished runs (mock-run-*) that the canvas samples already show.
+const seeded = (runId?: string | null) => !!runId && runId.startsWith('mock-run-')
+
 /** Canvas week plus any items the shared mock has (runs finished this session). */
 function mergeWeek(base: WeekResponse, extra: WeekResponse): WeekResponse {
   const days: WeekDay[] = base.days.map((d) => ({ ...d, items: [...d.items] }))
   for (const day of extra.days) {
     for (const item of day.items) {
+      if (seeded(item.run_id)) continue
       const existing = days.flatMap((d) => d.items).find((i) => i.event.id === item.event.id)
       if (existing) {
         existing.status = item.status
@@ -101,11 +105,9 @@ export async function getActivity(): Promise<ActivityResponse> {
     const base = sample.activity()
     const shared = await api.getActivity().catch(() => null)
     if (!shared) return base
-    const newest = [...shared.items].sort((a, b) => b.at.localeCompare(a.at))
-    return {
-      items: [...newest, ...base.items],
-      spend: { spent_usd: base.spend.spent_usd + shared.spend.spent_usd, limit_usd: shared.spend.limit_usd || base.spend.limit_usd },
-    }
+    // Runs started this session go on top; the spend stays the canvas's.
+    const newest = shared.items.filter((i) => !seeded(i.run_id)).sort((a, b) => b.at.localeCompare(a.at))
+    return { items: [...newest, ...base.items], spend: base.spend }
   }
   return orSample('GET /api/activity', api.getActivity, sample.activity)
 }

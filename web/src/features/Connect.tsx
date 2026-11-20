@@ -112,7 +112,7 @@ export function ConnectScreen() {
   const calendar: CalendarStatus | null = cal.load.state === 'ready' ? cal.load.data : null
 
   return (
-    <main className="ft-screen" aria-labelledby="ft-connect-title">
+    <main className="screen ft-screen" aria-labelledby="ft-connect-title">
       <div className="ft-head">
         <h1 id="ft-connect-title" className="ft-title">
           Connect your sites

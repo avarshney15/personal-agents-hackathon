@@ -36,7 +36,7 @@ export function WeekScreen() {
   const { load, reload } = useLoad(getWeek)
 
   return (
-    <main className="ft-screen ft-screen--list" aria-labelledby="ft-week-title" aria-busy={load.state === 'loading'}>
+    <main className="screen ft-screen ft-screen--list" aria-labelledby="ft-week-title" aria-busy={load.state === 'loading'}>
       <div className="ft-titlebar">
         <h1 id="ft-week-title" className="ft-title">
           Your week
