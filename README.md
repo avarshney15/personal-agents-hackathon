@@ -4,7 +4,7 @@ An events agent that says who it is, remembers you, and proves it worked. Built 
 Personal Agents Hackathon (tokens&, San Francisco, November 20, 2026).
 
 Event Agent finds events you'll like, then RSVPs for you on the event site itself from a Chrome
-session it hosts for you. Every RSVP tells the host it's an agent acting for a verified person.
+session it hosts for you. Every RSVP is made for a person verified once with Persona.
 
 - Plan: [Core architecture](https://claude.ai/artifact/PZFsgYjuPDp36PsoPDuRda) ·
   [Agent architecture](https://claude.ai/artifact/6snCsmF9qDBbjUA8AaNENZ) ·
