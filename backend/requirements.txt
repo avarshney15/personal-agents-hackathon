@@ -5,3 +5,4 @@
 -r requirements/telemetry.txt
 -r requirements/backend.txt
 -r requirements/act.txt
+-r requirements/extra.txt
