@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sponsor map</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#111214;font-weight:600}a:hover{color:#111214;text-decoration:underline}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1180px; box-sizing: border-box; padding: 56px 64px; background: #f5f4f0; color: #111214; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; display: flex; flex-direction: column; gap: 28px;">
+
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 32px;">
+    <div style="display: flex; flex-direction: column; gap: 8px; max-width: 860px;">
+      <h1 style="margin: 0; font-size: 32px; line-height: 1.12; font-weight: 750; letter-spacing: -0.025em;">An events agent that says who it is, remembers you, and proves it worked</h1>
+      <p style="margin: 0; font-size: 15px; line-height: 1.45; color: #6b6e76;">The agent keeps acting on your own logged-in accounts while you're offline. The sponsors add memory, ranking, a verified human behind each action, and measurement. Nine sponsors, cut into what we build first, what we add if time allows, and what we ask about at the booth.</p>
+    </div>
+    <div style="display: flex; gap: 8px; flex-shrink: 0;">
+      <span style="font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 999px; background: #e1f3e8; color: #1f7a46;">Core · 4</span>
+      <span style="font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 999px; background: #e2ebfb; color: #2a5cb3;">Stretch · 3</span>
+      <span style="font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 999px; background: #fcefd5; color: #8f5300;">Ask at booth · 2</span>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px;">
+    <sc-for list="{{stages}}" as="s" hint-placeholder-count="6">
+      <div style="background: #ffffff; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(17,18,20,.04), 0 10px 30px rgba(17,18,20,.08);">
+        <span style="font-size: 11px; font-weight: 700; color: #6b6e76;">{{s.n}}</span>
+        <span style="font-size: 17px; font-weight: 700; line-height: 1.3;">{{s.verb}}</span>
+        <span style="font-size: 13px; line-height: 1.45; color: #6b6e76;">{{s.what}}</span>
+        <span style="font-size: 13px; line-height: 1.45; font-weight: 650;">{{s.who}}</span>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; flex-grow: 1;">
+    <sc-for list="{{tiers}}" as="t" hint-placeholder-count="3">
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 17px; font-weight: 700;">{{t.name}}</span>
+          <span style="font-size: 13px; color: #6b6e76;">{{t.sub}}</span>
+        </div>
+        <sc-for list="{{t.cards}}" as="c" hint-placeholder-count="3">
+          <div style="background: #ffffff; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 8px; border: 1px solid #e6e4de;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+              <span style="font-size: 16.5px; font-weight: 650; letter-spacing: -0.01em;">{{c.name}}</span>
+              <span style="font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 999px; background: {{c.tagBg}}; color: {{c.tagFg}};">{{c.tag}}</span>
+            </div>
+            <span style="font-size: 14px; line-height: 1.45;">{{c.role}}</span>
+            <span style="font-size: 13px; line-height: 1.45; color: #6b6e76;">{{c.replaces}}</span>
+            <span style="font-size: 13px; line-height: 1.45; color: #6b6e76;">{{c.judge}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display: flex; gap: 24px; align-items: center; border-top: 1px solid #e6e4de; padding-top: 16px;">
+    <span style="font-size: 13px; line-height: 1.45; color: #6b6e76; flex-grow: 1;">Carried over unchanged: ordinary Chrome on each person's cloud desktop, Claude driving the screen for RSVPs, the Luma, Meetup, Eventbrite and Partiful readers, and the web app. Built today: everything on this board.</span>
+    <span style="font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 999px; background: #ffecd8; color: #c2410c; flex-shrink: 0;">Unconfirmed</span>
+    <span style="font-size: 13px; color: #6b6e76; flex-shrink: 0;">= not checked against the sponsor's docs yet</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const core = { tag: 'Core', tagBg: '#e1f3e8', tagFg: '#1f7a46' };
+    const stretch = { tag: 'Stretch', tagBg: '#e2ebfb', tagFg: '#2a5cb3' };
+    const ask = { tag: 'Ask at booth', tagBg: '#fcefd5', tagFg: '#8f5300' };
+    const unconf = { tag: 'Unconfirmed', tagBg: '#ffecd8', tagFg: '#c2410c' };
+    return {
+      stages: [
+        { n: '1', verb: 'Read', what: 'Your events from your accounts, plus your calendar', who: 'Event Agent readers · Airbyte' },
+        { n: '2', verb: 'Remember', what: 'What you went to, skipped, and say you’re into', who: 'Cognee' },
+        { n: '3', verb: 'Rank', what: 'For you and Ask, with a reason for each', who: 'Superlinked · Arcee' },
+        { n: '4', verb: 'Act', what: 'RSVP on the site itself, on your cloud desktop', who: 'Claude computer use · Guild' },
+        { n: '5', verb: 'Prove', what: 'A verified person stands behind every action', who: 'Persona' },
+        { n: '6', verb: 'Measure', what: 'Every run traced; ranking tried as an experiment', who: 'Amplitude + Statsig · Firedrill' }
+      ],
+      tiers: [
+        { name: 'Core', sub: 'build first, about 4 hours', cards: [
+          Object.assign({ name: 'Persona', role: 'Verify the person once (ID and selfie, in the sandbox). The agent then tells hosts it is an agent acting for a verified person.', replaces: 'New. Turns our rule “never disguise the automation” into a feature.', judge: 'Judge sees: Verify once, then a “Verified person” line on every RSVP.' }, core),
+          Object.assign({ name: 'Cognee', role: 'Memory: remember went, skipped, hidden and “into right now”; recall it to explain a match; forget on request.', replaces: 'Replaces the signal store behind logic/profile.py and focus.py.', judge: 'Judge sees: “Why this” lines and a memory screen with Forget.' }, core),
+          Object.assign({ name: 'Superlinked', role: 'Embed events and your taste, then rerank the shortlist (SIE encode and score).', replaces: 'Replaces the TF-IDF in logic/similar.py. $20 free credits, or run it locally.', judge: 'Judge sees: For you reorders the moment you say what you’re into.' }, core),
+          Object.assign({ name: 'Amplitude + Statsig', role: 'Agent Analytics traces each Claude run; a Statsig experiment splits old ranking from new.', replaces: 'Adds to audit.py. Both free tiers; a few lines each.', judge: 'Judge sees: a live chart of agent runs and the ranking experiment.' }, core)
+        ]},
+        { name: 'Stretch', sub: 'if core lands by 3:15', cards: [
+          Object.assign({ name: 'Arcee', role: 'Text jobs on an open-weight model: tagging events and reading Ask’s intent. Screen-driving stays on Claude.', replaces: 'Swaps llm.tag_events and llm.intent. Which models are hosted: unconfirmed.', judge: 'Judge sees: cheaper tagging, same tags.' }, stretch),
+          Object.assign({ name: 'SingleStore', role: 'The public catalog and its vectors in one free workspace, searched in SQL.', replaces: 'Only the catalog moves; the job queue stays on Postgres. Wire protocol: unconfirmed.', judge: 'Judge sees: Ask answered by one hybrid query.' }, stretch),
+          Object.assign({ name: 'Airbyte', role: 'PyAirbyte reads your Google Calendar so clashes include your real meetings.', replaces: 'Adds a source next to sync.py. Calendar connector: unconfirmed.', judge: 'Judge sees: a clash card naming your 7 pm call.' }, stretch)
+        ]},
+        { name: 'Ask at booth', sub: 'needs access or a docs link first', cards: [
+          Object.assign({ name: 'Guild', role: 'Run the scheduled sync agent under Guild with a spend cap and an audit log.', replaces: 'Its agents can’t reach the open web, so only the scheduler moves. Account is sales-gated.', judge: 'Judge sees: per-person spend caps on the agent.' }, ask),
+          Object.assign({ name: 'Firedrill', role: 'Rehearse RSVPs against a simulated event site, and keep a demo that works when Luma asks for a human check.', replaces: 'Would back evals.py. Couldn’t find its site or docs.', judge: 'Judge sees: 50 simulated RSVPs and their pass rate.' }, unconf)
+        ]}
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

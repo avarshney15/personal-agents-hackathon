@@ -1,0 +1,7 @@
+-r requirements/base.txt
+-r requirements/memory.txt
+-r requirements/ranking.txt
+-r requirements/identity.txt
+-r requirements/telemetry.txt
+-r requirements/backend.txt
+-r requirements/act.txt

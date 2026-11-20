@@ -20,3 +20,10 @@ build/
 # Editors
 .vscode/
 .idea/
+
+# Event Agent
+browser_profile/
+*.db
+*.sqlite
+frames/
+.pytest_cache/

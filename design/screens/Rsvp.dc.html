@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RSVP progress</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #6b6e76; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; color: #111214; display: flex; flex-direction: column; justify-content: flex-end;">
+  <div style="background: #f5f4f0; border-radius: 18px 18px 0 0; padding: 20px 16px 32px; display: flex; flex-direction: column; gap: 16px; height: 760px; box-sizing: border-box;">
+    <div style="width: 40px; height: 5px; border-radius: 999px; background: #e6e4de; align-self: center;"></div>
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <span style="align-self: flex-start; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #e2ebfb; color: #2a5cb3;">Pending</span>
+      <h2 style="margin: 0; font-size: 22px; line-height: 1.2; font-weight: 700; letter-spacing: -0.015em;">Agent builders night</h2>
+      <span style="font-size: 14px; color: #6b6e76;">Tue 6:30 pm · SoMa · on Luma</span>
+    </div>
+
+    <div style="background: #ffffff; border-radius: 18px; padding: 16px; box-shadow: 0 1px 2px rgba(17,18,20,.04), 0 10px 30px rgba(17,18,20,.08); display: flex; flex-direction: column; gap: 14px;">
+      <span style="font-size: 17px; font-weight: 700;">Here&#8217;s the plan</span>
+      <sc-for list="{{steps}}" as="s" hint-placeholder-count="5">
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+          <sc-if value="{{s.done}}" hint-placeholder-val="{{true}}">
+            <span style="width: 22px; height: 22px; border-radius: 999px; background: #1f7a46; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg>
+            </span>
+          </sc-if>
+          <sc-if value="{{s.current}}" hint-placeholder-val="{{false}}">
+            <span style="width: 22px; height: 22px; border-radius: 999px; border: 2px solid #111214; box-sizing: border-box; flex-shrink: 0; display: flex; align-items: center; justify-content: center;"><span style="width: 8px; height: 8px; border-radius: 999px; background: #111214;"></span></span>
+          </sc-if>
+          <sc-if value="{{s.waiting}}" hint-placeholder-val="{{false}}">
+            <span style="width: 22px; height: 22px; border-radius: 999px; border: 2px solid #e6e4de; box-sizing: border-box; flex-shrink: 0;"></span>
+          </sc-if>
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 15px; font-weight: 650;">{{s.title}}</span>
+            <span style="font-size: 13px; line-height: 1.45; color: #6b6e76;">{{s.detail}}</span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="background: #e1f3e8; border-radius: 18px; padding: 12px 14px; display: flex; gap: 10px; align-items: center;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1f7a46" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z"></path><path d="M9 12l2 2 4-4"></path></svg>
+      <span style="font-size: 14px; line-height: 1.4; color: #1f7a46; font-weight: 650;">Acting for a verified person</span>
+    </div>
+
+    <div style="flex-grow: 1;"></div>
+    <span style="font-size: 13px; line-height: 1.45; color: #6b6e76; text-align: center;">You can close this. We&#8217;ll tell you when you&#8217;re in, or if the agent needs you.</span>
+    <button type="button" style="height: 52px; border-radius: 999px; border: 0; background: #ecebe6; color: #111214; font: inherit; font-size: 16px; font-weight: 650;">Watch the agent</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const done = { done: true, current: false, waiting: false };
+    const cur = { done: false, current: true, waiting: false };
+    const wait = { done: false, current: false, waiting: true };
+    return {
+      steps: [
+        Object.assign({ title: 'Checked the event', detail: 'Free, spots left, no host questions.' }, done),
+        Object.assign({ title: 'Opened Luma on your cloud desktop', detail: 'Signed in as you, from when you connected.' }, done),
+        Object.assign({ title: 'Told the host who’s registering', detail: '“Registered by Event Agent for a verified person.”' }, cur),
+        Object.assign({ title: 'Register', detail: 'One tap on Luma’s own button.' }, wait),
+        Object.assign({ title: 'Check it worked', detail: 'Read your status back from the page.' }, wait)
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

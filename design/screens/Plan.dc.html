@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Build plan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 900px; height: 1180px; box-sizing: border-box; padding: 56px; background: #f5f4f0; color: #111214; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; display: flex; flex-direction: column; gap: 24px;">
+  <div style="display: flex; flex-direction: column; gap: 8px;">
+    <h1 style="margin: 0; font-size: 32px; line-height: 1.12; font-weight: 750; letter-spacing: -0.025em;">Five and a half hours</h1>
+    <p style="margin: 0; font-size: 15px; line-height: 1.45; color: #6b6e76;">Kickoff 11:00, submission 4:30, demos 5:00. Four sponsors done well beat nine done thinly, so the stretch work only starts once the demo runs end to end.</p>
+  </div>
+
+  <div style="background: #ffffff; border-radius: 18px; padding: 8px 20px; box-shadow: 0 1px 2px rgba(17,18,20,.04), 0 10px 30px rgba(17,18,20,.08); display: flex; flex-direction: column;">
+    <sc-for list="{{slots}}" as="s" hint-placeholder-count="8">
+      <div style="display: flex; gap: 20px; padding: 12px 0; border-bottom: 1px solid #e6e4de; align-items: flex-start;">
+        <span style="width: 110px; flex-shrink: 0; font-size: 14px; font-weight: 650; font-variant-numeric: tabular-nums;">{{s.t}}</span>
+        <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1;">
+          <span style="font-size: 16px; font-weight: 650;">{{s.what}}</span>
+          <span style="font-size: 13px; line-height: 1.45; color: #6b6e76;">{{s.detail}}</span>
+        </div>
+        <span style="font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 999px; background: {{s.bg}}; color: {{s.fg}}; flex-shrink: 0;">{{s.tag}}</span>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;">
+    <div style="background: #ffffff; border-radius: 18px; padding: 16px; border: 1px solid #e6e4de; display: flex; flex-direction: column; gap: 8px;">
+      <h3 style="margin: 0; font-size: 17px; font-weight: 700;">The 3-minute demo</h3>
+      <ol style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.6;">
+        <li>Verify once with Persona</li>
+        <li>Say &#8220;climbing and AI agents lately&#8221;</li>
+        <li>For you reorders, each with a reason</li>
+        <li>Tap RSVP: the agent says who it is, then &#8220;You&#8217;re going&#8221;</li>
+        <li>Show the runs and the experiment in Amplitude</li>
+      </ol>
+    </div>
+    <div style="background: #fcefd5; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 8px;">
+      <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: #8f5300;">Settle before kickoff</h3>
+      <ul style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.6; color: #111214;">
+        <li>May we build on code written before today? Ask the organisers.</li>
+        <li>Persona sandbox keys and Guild access, at their booths</li>
+        <li>Firedrill&#8217;s docs link</li>
+        <li>A backup video in case Luma asks for a human check live</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":900,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const core = { tag: 'Core', bg: '#e1f3e8', fg: '#1f7a46' };
+    const stretch = { tag: 'Stretch', bg: '#e2ebfb', fg: '#2a5cb3' };
+    const ops = { tag: 'Setup', bg: '#ecebe6', fg: '#111214' };
+    return {
+      slots: [
+        Object.assign({ t: '11:00 – 11:30', what: 'Fork, keys, booths', detail: 'New repo from event-engine; keys for Superlinked, Amplitude, Statsig; Persona sandbox; ask Guild and Firedrill for access.' }, ops),
+        Object.assign({ t: '11:30 – 12:30', what: 'Memory with Cognee', detail: 'remember() on every went, skipped, hidden and “into right now”; recall() to write each match’s reason; a Forget button.' }, core),
+        Object.assign({ t: '12:30 – 1:30', what: 'Ranking with Superlinked', detail: 'encode() the catalog once, score() the top 40 against taste plus recall. Statsig gate: old ranking or new.' }, core),
+        Object.assign({ t: '1:30 – 2:00', what: 'Lunch, and Amplitude traces', detail: 'Wrap the Anthropic client with amplitude-ai; log RSVP outcomes.' }, core),
+        Object.assign({ t: '2:00 – 3:15', what: 'Verified person with Persona', detail: 'Verify once in onboarding; the RSVP step fills the host’s note field with the agent disclosure; badge in the app.' }, core),
+        Object.assign({ t: '3:15 – 4:00', what: 'One stretch, picked by what’s working', detail: 'Arcee for tagging, Airbyte for your calendar, or SingleStore for the catalog. Only one.' }, stretch),
+        Object.assign({ t: '4:00 – 4:20', what: 'Record the backup demo', detail: 'Reuse the launch-video page; record a full run while it works.' }, ops),
+        Object.assign({ t: '4:20 – 4:30', what: 'Submit', detail: 'README with the sponsor map and what was built today.' }, ops)
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
