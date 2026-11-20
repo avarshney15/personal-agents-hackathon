@@ -47,7 +47,6 @@ export default function App() {
   const meRef = useRef<User | null>(null)
   const [watched, setWatched] = useState<Watched | null>(null)
   const [banner, setBanner] = useState<Banner | null>(null)
-  const [onboarding] = useState(() => !flag('onboarded'))
 
   const setMe = useCallback((u: User) => {
     meRef.current = u
@@ -135,6 +134,7 @@ export default function App() {
   // Verify finished or skipped: carry on with a pending RSVP, the first-run flow, or go back.
   const afterVerify = useCallback(
     async (verified: boolean) => {
+      const firstRun = !flag('onboarded')
       setFlag('onboarded')
       if (!verified) setFlag('skipVerify')
       const pending = sessionValue('pendingRsvp')
@@ -148,10 +148,10 @@ export default function App() {
           // fall through to For you
         }
       }
-      if (onboarding) navigate({ name: 'connect' }, { replace: true })
+      if (firstRun) navigate({ name: 'connect' }, { replace: true })
       else navigate({ name: 'discover' }, { replace: true })
     },
-    [onboarding, rsvp],
+    [rsvp],
   )
 
   if (route.name === 'ops') {
