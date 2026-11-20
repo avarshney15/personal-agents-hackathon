@@ -1,1 +1,4 @@
 # Part-owned: add this part's own dependencies below
+amplitude-analytics>=1.3,<2       # Amplitude Python SDK: product events (track, identify)
+amplitude-ai>=1.30,<2             # Amplitude agent analytics: wraps the Anthropic client
+statsig-python-core>=0.24,<1      # Statsig Server Core SDK: the ranking experiment
