@@ -174,6 +174,9 @@ def get_calendar(user: User = Depends(current_user)) -> dict:
 @router.post("/api/calendar/connect")
 def connect_calendar(user: User = Depends(current_user)) -> dict:
     get_extra_store().set_calendar(user.id, True)
+    calendar = registry.get_calendar()
+    if hasattr(calendar, "refresh"):  # Google Calendar through Airbyte: start reading now
+        calendar.refresh()
     data.track(user.id, "calendar_connected", {"source": _calendar_source()})
     return {"connected": True, "source": _calendar_source()}
 

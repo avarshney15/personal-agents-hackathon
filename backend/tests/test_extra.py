@@ -389,3 +389,78 @@ def test_ops_from_runs_with_sample_fallbacks(env):
 
     sample = c.OpsSummary.model_validate(env.client.get("/api/ops?sample=1").json())
     assert sample.sample and sample.runs_today == 128 and sample.recent[0].run == "RSVP · Agent builders night"
+
+
+# ---------------------------------------------------------------- Google Calendar through Airbyte (stretch)
+
+
+def _g(dt):
+    return {"dateTime": dt.isoformat(), "timeZone": "America/Los_Angeles"}
+
+
+def test_airbyte_calendar_reads_busy_timed_events():
+    from datetime import datetime, timezone
+
+    from app.extra.calendar_airbyte import AirbyteCalendar, config_from_env
+
+    t0 = datetime(2026, 11, 24, 18, 0, tzinfo=timezone(timedelta(hours=-8)))
+    records = [
+        {"id": "sam", "summary": "Call with Sam", "start": _g(t0), "end": _g(t0 + timedelta(hours=1)),
+         "status": "confirmed"},
+        {"id": "gone", "summary": "Cancelled", "start": _g(t0), "end": _g(t0 + timedelta(hours=1)),
+         "status": "cancelled"},
+        {"id": "free", "summary": "Focus (free)", "start": _g(t0), "end": _g(t0 + timedelta(hours=1)),
+         "transparency": "transparent"},
+        {"id": "bday", "summary": "Birthday", "start": {"date": "2026-11-24"}, "end": {"date": "2026-11-25"}},
+        {"id": "standup", "summary": "Standup", "start": _g(t0 - timedelta(days=7, hours=8)),
+         "end": _g(t0 - timedelta(days=7, hours=7, minutes=45)), "recurrence": ["RRULE:FREQ=DAILY"]},
+    ]
+    seen = []
+    cal = AirbyteCalendar(reader=lambda cfg: seen.append(cfg) or records, config={"credentials": {}})
+    assert isinstance(cal, c.Calendar)
+    items = cal.items("demo", t0 - timedelta(hours=12), t0 + timedelta(hours=12))
+    assert [i.title for i in items] == ["Standup", "Call with Sam"]
+    assert items[0].starts_at == t0 - timedelta(hours=8)  # the daily standup's Nov 24 instance, 10:00 PT
+    assert len(seen) == 1 and cal.add_event("demo", FakeCatalog().events()[0]) is False
+    cal.items("demo", t0, t0 + timedelta(hours=1))
+    assert len(seen) == 1  # cached
+
+    clash_cal = AirbyteCalendar(reader=lambda cfg: records, config={})
+    event = c.Event(id="e", title="Agent builders night", url="https://lu.ma/e", starts_at=t0 + timedelta(minutes=30))
+    from app.extra.week import clash_for
+    clash = clash_for(event, clash_cal.items("demo", t0 - timedelta(days=1), t0 + timedelta(days=1)))
+    assert clash and clash.item.title == "Call with Sam" and clash.minutes_late == 30
+
+    with pytest.raises(RuntimeError, match="GOOGLE_CALENDAR_CLIENT_ID"):
+        import os
+        for k in ("GOOGLE_CALENDAR_CLIENT_ID", "GOOGLE_CALENDAR_CLIENT_SECRET", "GOOGLE_CALENDAR_REFRESH_TOKEN"):
+            os.environ.pop(k, None)
+        config_from_env()
+
+
+def test_airbyte_calendar_failure_is_empty_not_fatal():
+    from datetime import datetime, timezone
+
+    from app.extra.calendar_airbyte import AirbyteCalendar
+
+    def boom(cfg):
+        raise RuntimeError("no token")
+
+    cal = AirbyteCalendar(reader=boom, config={})
+    now = datetime.now(timezone.utc)
+    assert cal.items("demo", now, now + timedelta(days=1)) == [] and cal.error == "no token"
+
+
+def test_airbyte_subprocess_reader_parses_marker_line(tmp_path, monkeypatch):
+    """The real reader runs PyAirbyte in its own venv; here a stand-in python prints like it does."""
+    from app.extra import calendar_airbyte
+
+    fake_python = tmp_path / "python"
+    fake_python.write_text("#!/bin/sh\ncat >/dev/null\necho 'Writing PyAirbyte logs to file: /tmp/x.log'\n"
+                           "echo 'EVENTS_JSON [{\"id\": \"sam\", \"summary\": \"Call with Sam\"}]'\n")
+    fake_python.chmod(0o755)
+    monkeypatch.setenv("AIRBYTE_PYTHON", str(fake_python))
+    assert calendar_airbyte.subprocess_reader({}) == [{"id": "sam", "summary": "Call with Sam"}]
+    fake_python.write_text("#!/bin/sh\necho 'boom' >&2\nexit 3\n")
+    with pytest.raises(RuntimeError, match="boom"):
+        calendar_airbyte.subprocess_reader({})

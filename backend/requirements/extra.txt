@@ -1,1 +1,6 @@
 # Part-owned: add this part's own dependencies below
+# Part 8 (app/extra): recurring Google Calendar events are expanded with dateutil.
+python-dateutil>=2.8
+# Google Calendar through Airbyte (CALENDAR_SOURCE=airbyte, stretch) needs PyAirbyte in its OWN venv,
+# because its pins (sqlalchemy, structlog, pyarrow, rich, wrapt) clash with the app's:
+#   uv venv --python 3.11 backend/.venv-airbyte && uv pip install --python backend/.venv-airbyte/bin/python airbyte
