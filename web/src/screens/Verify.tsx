@@ -34,7 +34,9 @@ export function VerifyScreen({
   // Opened from Profile by someone already verified: show their status instead of the flow.
   const [alreadyVerified] = useState(me.verified && !returning)
   const finished = useRef(false)
-  const [phase, setPhase] = useState<Phase>(returning ? 'waiting' : 'idle')
+  // Only wait for a result when an inquiry was really started: "?verified=1" can also come
+  // from the address bar's autocomplete, and then there is nothing to wait for.
+  const [phase, setPhase] = useState<Phase>(returning && me.persona_inquiry_id ? 'waiting' : 'idle')
   const [personaUrl, setPersonaUrl] = useState<string | null>(null)
   const [blocked, setBlocked] = useState(false)
   const [error, setError] = useState('')
