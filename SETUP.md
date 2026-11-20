@@ -39,12 +39,17 @@ section below, remove that module from the list. `ACT_FAKE=0` turns on the real 
    tagging, "into right now" parsing and Ask (`TEXT_PROVIDER` blank).
 2. For the stage, set `RSVP_MODEL=claude-opus-5-5`. The default, `claude-haiku-5-5`, costs less (the canvas
    shows Haiku at about $0.06 per RSVP) but is less reliable at multi-step screen work.
-3. Sign in to Luma once in the agent's own Chrome profile (stop the server first; one browser per profile):
-   `cd backend && .venv/bin/python scripts/login_luma.py`, sign in, close the window.
+3. Sign in to Luma once in the agent's Chrome. The agent uses the real Chrome app, not Playwright's
+   bundled browser, where Luma's "Verify you are human" check never clears:
+   `cd backend && .venv/bin/python scripts/login_luma.py` opens Chrome on its own profile
+   (`~/.event-agent/chrome`) at Luma's sign-in page. Tick the check yourself, sign in, and **leave that
+   Chrome window open**: every RSVP runs in a new tab there, and you can watch it.
    Check it: `.venv/bin/python scripts/login_luma.py --check`.
 4. One real test RSVP (this registers your Luma account for a real event):
-   `.venv/bin/python scripts/try_rsvp.py https://luma.com/fastmcp-meetup-dec26 --headed`
-   Frames land in `backend/frames/try_rsvp/`. If Luma asks for an emailed code, the script prompts for it.
+   `.venv/bin/python scripts/try_rsvp.py https://luma.com/fastmcp-meetup-dec26`
+   It runs in a new tab of the agent's Chrome. Frames land in `backend/frames/try_rsvp/`. If Luma asks for
+   an emailed code, the script prompts for it. If Luma shows a human check mid-run, the agent stops and hands
+   back; tick it in that Chrome window and RSVP again.
 5. Free events with no host questions in the catalog: `fastmcp-meetup-dec26` (plain Register, best),
    `mission-u38j`, `hz1hopu7` (host approval, so it reads back "Pending approval").
 

@@ -77,7 +77,9 @@ class ComputerExecutor:
     # ------------------------------------------------------------ screenshots
 
     def screenshot(self) -> bytes:
-        png = self.get_page().screenshot(type="png", timeout=15000)
+        # scale="css": one image pixel per page pixel, so Claude's coordinates match the mouse
+        # even on a Retina screen, where the real Chrome app renders at 2x.
+        png = self.get_page().screenshot(type="png", timeout=15000, scale="css")
         self.on_frame(png)
         return png
 

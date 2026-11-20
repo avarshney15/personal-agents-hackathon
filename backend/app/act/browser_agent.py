@@ -6,6 +6,10 @@ Claude computer use loop on the computer toolset (computer_toolset_20260801); Cl
 changes through a small report_step tool, asks for login codes through need_code, and ends with
 finish.
 
+Browser: BROWSER=chrome (default) drives a tab in the real Chrome app (chrome_app.py), where you
+signed in to Luma yourself; BROWSER=chromium uses Playwright's bundled browser (tests only: Luma's
+human check never clears there).
+
 Env: BROWSER_PROFILE_DIR (./browser_profile), BROWSER_HEADLESS (1), RSVP_MODEL (claude-haiku-5-5),
 RSVP_EFFORT (medium), RSVP_MAX_ACTIONS (30), RSVP_MAX_SECONDS (240), RSVP_FALLBACKS (auto).
 """
@@ -291,6 +295,9 @@ class BrowserRsvpAgent:
                  headless: Optional[bool] = None, model: Optional[str] = None,
                  max_actions: Optional[int] = None, max_seconds: Optional[float] = None) -> None:
         self._client = client
+        # "chrome" (default): the real Chrome app, see chrome_app.py. "chromium": Playwright's
+        # bundled browser on BROWSER_PROFILE_DIR, used by the tests.
+        self.browser = os.getenv("BROWSER", "chrome").strip().lower()
         self.profile_dir = profile_dir or os.getenv("BROWSER_PROFILE_DIR", "./browser_profile")
         self.headless = headless if headless is not None else \
             os.getenv("BROWSER_HEADLESS", "1").strip().lower() not in ("0", "false", "no")
@@ -352,22 +359,26 @@ class BrowserRsvpAgent:
         try:
             from playwright.sync_api import sync_playwright
 
-            profile = str(Path(self.profile_dir).expanduser().resolve())
-            Path(profile).mkdir(parents=True, exist_ok=True)
-            with _profile_lock(profile), sync_playwright() as pw:
-                ctx = pw.chromium.launch_persistent_context(
-                    profile, headless=self.headless,
-                    viewport={"width": VIEWPORT[0], "height": VIEWPORT[1]},
-                    device_scale_factor=1, locale="en-US",
-                )
-                try:
-                    outcome = self._drive(ctx, steps, user, event, disclosure, on_frame,
-                                          ask_user, clock)
-                finally:
+            if self.browser == "chrome":
+                outcome = self._run_in_chrome_app(sync_playwright, steps, user, event,
+                                                  disclosure, on_frame, ask_user, clock)
+            else:
+                profile = str(Path(self.profile_dir).expanduser().resolve())
+                Path(profile).mkdir(parents=True, exist_ok=True)
+                with _profile_lock(profile), sync_playwright() as pw:
+                    ctx = pw.chromium.launch_persistent_context(
+                        profile, headless=self.headless,
+                        viewport={"width": VIEWPORT[0], "height": VIEWPORT[1]},
+                        device_scale_factor=1, locale="en-US",
+                    )
                     try:
-                        ctx.close()
-                    except Exception:  # browser already gone
-                        pass
+                        outcome = self._drive(ctx, steps, user, event, disclosure, on_frame,
+                                              ask_user, clock)
+                    finally:
+                        try:
+                            ctx.close()
+                        except Exception:  # browser already gone
+                            pass
             steps.complete()
             return result(status="done", outcome=outcome)
         except _Stop as stop:
@@ -382,6 +393,28 @@ class BrowserRsvpAgent:
             reason = _short(f"The agent hit an error: {type(exc).__name__}: {exc}", 300)
             steps.stop(reason)
             return result(status="failed", stop_reason=reason)
+
+    def _run_in_chrome_app(self, sync_playwright: Any, steps: _Steps, user: User, event: Event,
+                           disclosure: str, on_frame: FrameCallback,
+                           ask_user: Optional[AskUserCallback], clock: dict) -> str:
+        """Drives a new tab in the real Chrome app (see chrome_app.py); leaves Chrome running."""
+        from app.act import chrome_app
+
+        url = chrome_app.ensure_running()
+        with _profile_lock(url), sync_playwright() as pw:
+            browser = pw.chromium.connect_over_cdp(url)
+            ctx = browser.contexts[0] if browser.contexts else browser.new_context()
+            tab = ctx.new_page()
+            tab.set_viewport_size({"width": VIEWPORT[0], "height": VIEWPORT[1]})
+            try:
+                return self._drive(ctx, steps, user, event, disclosure, on_frame, ask_user,
+                                   clock, start_page=tab)
+            finally:
+                try:
+                    tab.close()
+                    browser.close()  # disconnects only; the Chrome app and its sign-in stay
+                except Exception:
+                    pass
 
     @staticmethod
     def _need_for(reason: str, key: StepKey, kind: Optional[str] = None) -> RunNeed:
@@ -419,8 +452,8 @@ class BrowserRsvpAgent:
 
     def _drive(self, ctx: Any, steps: _Steps, user: User, event: Event, disclosure: str,
                on_frame: FrameCallback, ask_user: Optional[AskUserCallback],
-               clock: dict) -> str:
-        pages = list(ctx.pages) or [ctx.new_page()]
+               clock: dict, start_page: Any = None) -> str:
+        pages = [start_page] if start_page is not None else (list(ctx.pages) or [ctx.new_page()])
         ctx.on("page", lambda p: pages.append(p))
 
         def page():

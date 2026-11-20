@@ -2,7 +2,7 @@
 
     cd backend
     .venv/bin/python scripts/login_luma.py            # once: sign in to Luma
-    .venv/bin/python scripts/try_rsvp.py https://lu.ma/<event> --headed
+    .venv/bin/python scripts/try_rsvp.py https://lu.ma/<event>   # runs in the agent's Chrome (BROWSER=chrome)
 
 Needs ANTHROPIC_API_KEY (in backend/.env or the shell). Frames go to ./frames/try_rsvp/.
 If Luma asks for an emailed code, you're prompted for it here.
@@ -54,7 +54,7 @@ def main() -> int:
     parser.add_argument("url", help="Luma event URL")
     parser.add_argument("--title", default="Luma event")
     parser.add_argument("--name", default=os.getenv("DEMO_USER_NAME", "Maya R."))
-    parser.add_argument("--headed", action="store_true", help="show the Chrome window")
+    parser.add_argument("--headed", action="store_true", help="BROWSER=chromium only: show the window")
     parser.add_argument("--profile", default=None, help="default: BROWSER_PROFILE_DIR")
     parser.add_argument("--model", default=None, help="default: RSVP_MODEL or claude-haiku-5-5")
     parser.add_argument("--frames", default="frames/try_rsvp")
