@@ -29,3 +29,4 @@ frames/
 .pytest_cache/
 cognee_data/
 memory.db
+data/sie_cache.json
