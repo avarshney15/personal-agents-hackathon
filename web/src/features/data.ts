@@ -1,56 +1,48 @@
 // Data for the Part 9 screens: the shared client (web/src/api.ts, one function per route in
-// backend/API.md) plus the canvas samples in ./samples.
+// backend/API.md), plus the canvas samples in ./samples for mock mode only.
 //
-// Mock mode (VITE_MOCK=1, ?mock=1, or no backend): the shared mock answers, and Week, Ask,
-// Activity and Ops show the canvas samples, merged with anything done in the session.
-// Live mode: when a route isn't there yet or the server errors (0, 404, 405, 5xx), the screen
-// falls back to the canvas sample instead of breaking. Other errors (a wrong code) reach the screen.
+// Mock mode (api.apiMode() === 'mock': VITE_MOCK=1, ?mock=1, or the shell found no backend):
+// the shared mock answers, and Week, Ask, Activity and Ops show the canvas samples, merged with
+// anything done in the session.
+// Live mode: never sample data. A failed call reaches the screen, which shows a short error in the
+// canvas's voice with Try again (see ./fail); unreachable routes are also logged to the console.
+// Ops is the one exception, and only because the server itself says `sample: true`.
 import * as api from '../api'
-import { ApiError } from '../errors'
+import { unavailable } from './fail'
 import * as sample from './samples'
 import type { ActivityResponse, AskResponse, Site, TasteRequest, WeekDay, WeekResponse } from './types'
 
 const isMock = async () => (await api.apiMode()) === 'mock'
 
-function missing(err: unknown): boolean {
-  const status = err instanceof ApiError ? err.status : 0
-  return status === 0 || status === 404 || status === 405 || status >= 500
-}
-
-async function orSample<T>(label: string, call: () => Promise<T>, fallback: () => T): Promise<T> {
+async function logged<T>(label: string, call: () => Promise<T>): Promise<T> {
   try {
     return await call()
   } catch (err) {
-    if (!missing(err)) throw err
-    console.warn(`[features] ${label} unavailable; showing canvas sample data`, err)
-    return fallback()
+    if (unavailable(err)) console.warn(`[features] ${label} failed`, err)
+    throw err
   }
 }
 
 // ---------------------------------------------------------------- Welcome
 
-export const authStart = (email: string) =>
-  orSample('POST /api/auth/start', () => api.authStart(email), () => ({ sent: true, dev_code: null }))
-
+export const authStart = (email: string) => logged('POST /api/auth/start', () => api.authStart(email))
 export const authVerify = (email: string, code: string) =>
-  orSample('POST /api/auth/verify', () => api.authVerify(email, code), () => sample.user(email))
+  logged('POST /api/auth/verify', () => api.authVerify(email, code))
 
 // ---------------------------------------------------------------- Connect, Sites
 
-export const getSites = () => orSample('GET /api/sites', api.getSites, sample.sites)
-export const connectSite = (site: Site) =>
-  orSample(`POST /api/sites/${site}/connect`, () => api.connectSite(site), () => sample.setSite(site, true))
-export const disconnectSite = (site: Site) =>
-  orSample(`DELETE /api/sites/${site}`, () => api.disconnectSite(site), () => sample.setSite(site, false))
-export const getCalendar = () => orSample('GET /api/calendar', api.getCalendar, sample.calendar)
-export const connectCalendar = () => orSample('POST /api/calendar/connect', api.connectCalendar, sample.connectCalendar)
+export const getSites = () => logged('GET /api/sites', api.getSites)
+export const connectSite = (site: Site) => logged(`POST /api/sites/${site}/connect`, () => api.connectSite(site))
+export const disconnectSite = (site: Site) => logged(`DELETE /api/sites/${site}`, () => api.disconnectSite(site))
+export const getCalendar = () => logged('GET /api/calendar', api.getCalendar)
+export const connectCalendar = () => logged('POST /api/calendar/connect', api.connectCalendar)
 
 // ---------------------------------------------------------------- Taste
 
 export const getMe = () => api.getMe()
 
 export async function saveTaste(req: TasteRequest) {
-  const feed = await orSample('POST /api/taste', () => api.postTaste(req), () => sample.taste(req))
+  const feed = await logged('POST /api/taste', () => api.postTaste(req))
   // The taste route takes usual_times too; PATCH /api/me keeps them on the profile either way.
   api.patchMe({ usual_times: req.usual_times }).catch(() => undefined)
   return feed
@@ -61,7 +53,7 @@ export async function saveTaste(req: TasteRequest) {
 // The shared mock seeds two finished runs (mock-run-*) that the canvas samples already show.
 const seeded = (runId?: string | null) => !!runId && runId.startsWith('mock-run-')
 
-/** Canvas week plus any items the shared mock has (runs finished this session). */
+/** Canvas week plus any items the shared mock has (runs finished this session). Mock mode only. */
 function mergeWeek(base: WeekResponse, extra: WeekResponse): WeekResponse {
   const days: WeekDay[] = base.days.map((d) => ({ ...d, items: [...d.items] }))
   for (const day of extra.days) {
@@ -88,14 +80,14 @@ export async function getWeek(): Promise<WeekResponse> {
     const shared = await api.getWeek().catch(() => ({ days: [], clashes: [] }) as WeekResponse)
     return mergeWeek(sample.week(), shared)
   }
-  return orSample('GET /api/week', api.getWeek, sample.week)
+  return logged('GET /api/week', api.getWeek)
 }
 
 // ---------------------------------------------------------------- Ask
 
 export async function ask(text: string): Promise<AskResponse> {
   if (sample.isSampleQuery(text) && (await isMock())) return sample.ask(text)
-  return orSample('POST /api/ask', () => api.ask(text), () => sample.ask(text))
+  return logged('POST /api/ask', () => api.ask(text))
 }
 
 // ---------------------------------------------------------------- Activity
@@ -109,12 +101,13 @@ export async function getActivity(): Promise<ActivityResponse> {
     const newest = shared.items.filter((i) => !seeded(i.run_id)).sort((a, b) => b.at.localeCompare(a.at))
     return { items: [...newest, ...base.items], spend: base.spend }
   }
-  return orSample('GET /api/activity', api.getActivity, sample.activity)
+  return logged('GET /api/activity', api.getActivity)
 }
 
 // ---------------------------------------------------------------- Ops
 
+/** Live mode shows whatever the server sends; its `sample` flag drives the "Sample data" label. */
 export async function getOps() {
   if (await isMock()) return sample.ops()
-  return orSample('GET /api/ops', api.getOps, sample.ops)
+  return logged('GET /api/ops', api.getOps)
 }

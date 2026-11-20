@@ -1,9 +1,10 @@
 // What are you into right now? (design/screens/Taste.dc.html)
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { apiMode } from '../api'
-import { errorText } from '../errors'
+import { AppContext } from '../app-state'
 import { useNav } from '../nav'
 import { getMe, saveTaste } from './data'
+import { failText } from './fail'
 import { SAMPLE_CHIPS, SAMPLE_TASTE, SAMPLE_TIMES } from './samples'
 import { ErrorLine } from './ui'
 import './features.css'
@@ -40,6 +41,7 @@ function ToggleGroup({ label, id, options, on, onToggle }: {
 
 export function TasteScreen() {
   const { navigate } = useNav()
+  const app = useContext(AppContext)
   const [text, setText] = useState('')
   const [chips, setChips] = useState<string[]>([])
   const [times, setTimes] = useState<string[]>([])
@@ -76,9 +78,10 @@ export function TasteScreen() {
     setError('')
     try {
       await saveTaste({ text: text.trim(), chips, usual_times: times })
+      void app?.reloadMe().catch(() => undefined)
       navigate({ name: 'week' })
     } catch (err) {
-      setError(errorText(err))
+      setError(failText(err, 'Couldn’t save that. Try again.'))
       setBusy(false)
     }
   }

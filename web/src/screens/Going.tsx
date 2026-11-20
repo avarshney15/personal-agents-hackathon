@@ -15,11 +15,26 @@ export function GoingScreen({ runId }: { runId: string }) {
     document.getElementById('going-title')?.focus({ preventScroll: true })
   }, [])
 
+  // The host is only told when step 3 really wrote the disclosure into a note on the form.
+  // Most Luma forms have no note field; then step 3's detail says so, and so does this row.
+  const toldHost = run?.steps.find((s) => s.key === 'told_host')
+  const noteLeft = !!toldHost && toldHost.state === 'done' && toldHost.detail.includes('Registered by Event Agent')
+  const noteRow = noteLeft
+    ? { title: 'Host told who registered you', detail: 'An agent, for a verified person.' }
+    : {
+        title: 'No note to the host',
+        detail:
+          toldHost?.state === 'done' && toldHost.detail && !toldHost.detail.startsWith('“')
+            ? toldHost.detail
+            : `No note field on ${site}’s form, so the host sees a normal registration.`,
+      }
+
   const checks = [
     waitlist
       ? { title: `On the waitlist on ${site}`, detail: `${site} shows you on the waitlist. You’ll hear if a spot opens.` }
       : { title: `Registered on ${site}`, detail: `${site} shows you as going. Ticket in your email.` },
-    { title: 'Host told who registered you', detail: 'An agent, for a verified person.' },
+    noteRow,
+    { title: 'Added to your calendar', detail: 'It shows up in your week.' },
     { title: 'Remembered', detail: 'The agent counts this next time it picks for you.' },
   ]
 

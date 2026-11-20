@@ -5,7 +5,6 @@ import { shortDate } from './format'
 import {
   STEP_ORDER,
   STEP_TEXT,
-  disclosureFor,
   type ActivityResponse,
   type AskResponse,
   type Event,
@@ -387,6 +386,10 @@ function feed(): FeedResponse {
 
 // ---------------------------------------------------------------- RSVP runs
 
+// Product decision: the agent doesn't message hosts. Luma's RSVP form has no note field, so
+// step 3 ends with this detail, as the real agent reports it.
+const NO_NOTE = 'This form has no note field, so the host only sees the registration.'
+
 const STEP_MS = 1500
 const QUEUE_MS = 700
 
@@ -430,6 +433,7 @@ function tick(m: MockRun) {
       r.stop_reason = 'Luma asked for a sign-in code.'
       return
     }
+    if (key === 'told_host') m.run.steps[m.idx] = { ...m.run.steps[m.idx]!, detail: NO_NOTE }
     setStep(m, m.idx, 'done')
     m.idx += 1
     m.phaseAt += STEP_MS
@@ -458,7 +462,7 @@ function newRun(eventId: string): RsvpRun {
       run_id: id,
       key,
       title,
-      detail: key === 'told_host' ? `“${disclosureFor(state.user.name)}”` : detail,
+      detail,
       state: 'waiting' as StepState,
     }
   })
@@ -506,7 +510,7 @@ function seedRun(id: string, eventId: string, outcome: 'going' | 'waitlist', min
       run_id: id,
       key,
       title: STEP_TEXT[key][0],
-      detail: key === 'told_host' ? `“${disclosureFor('Maya R.')}”` : STEP_TEXT[key][1],
+      detail: key === 'told_host' ? NO_NOTE : STEP_TEXT[key][1],
       state: 'done' as StepState,
     })),
     has_frame: true,
@@ -679,8 +683,8 @@ export async function mockFrame(runId: string): Promise<Blob | null> {
 <text x="32" y="96" font-family="Helvetica, Arial" font-size="28" font-weight="700" fill="#111214">${esc(event?.title ?? '')}</text>
 <text x="32" y="126" font-family="Helvetica, Arial" font-size="15" fill="#6b6e76">Hosted by ${esc(event?.host ?? '')}</text>
 <rect x="32" y="160" width="576" height="88" rx="12" fill="#f5f4f0" stroke="#e6e4de"/>
-<text x="48" y="190" font-family="Helvetica, Arial" font-size="13" fill="#6b6e76">Note to host</text>
-<text x="48" y="216" font-family="Helvetica, Arial" font-size="14" fill="#111214">${esc(disclosureFor(state.user.name).slice(0, 72))}</text>
+<text x="48" y="190" font-family="Helvetica, Arial" font-size="13" fill="#6b6e76">Name</text>
+<text x="48" y="216" font-family="Helvetica, Arial" font-size="14" fill="#111214">${esc(state.user.name)} · ${esc(state.user.email ?? '')}</text>
 <rect x="32" y="276" width="200" height="48" rx="24" fill="${going ? '#1f7a46' : '#111214'}"/>
 <text x="132" y="306" text-anchor="middle" font-family="Helvetica, Arial" font-size="16" font-weight="700" fill="#ffffff">${going ? 'You’re going' : 'Register'}</text>
 <text x="32" y="372" font-family="Helvetica, Arial" font-size="13" fill="#6b6e76">Agent: ${esc(step.title)}</text>

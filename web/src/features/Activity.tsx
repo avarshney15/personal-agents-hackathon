@@ -3,7 +3,9 @@ import { useNav } from '../nav'
 import { getActivity } from './data'
 import { usd } from './format'
 import type { ActivityItem } from './types'
-import { ErrorLine, Loading, RESULT_TONE, StatusPill, useLoad } from './ui'
+import { RESULT_TONE } from './tones'
+import { ErrorLine, Loading, StatusPill } from './ui'
+import { useLoad } from './useLoad'
 import './features.css'
 
 function Row({ item, onOpen }: { item: ActivityItem; onOpen?: () => void }) {
@@ -31,7 +33,7 @@ function Row({ item, onOpen }: { item: ActivityItem; onOpen?: () => void }) {
 
 export function ActivityScreen() {
   const { navigate } = useNav()
-  const { load, reload } = useLoad(getActivity)
+  const { load, reload } = useLoad(getActivity, 'Couldn’t load what the agent did.')
 
   const spend = load.state === 'ready' ? load.data.spend : null
   const share = spend && spend.limit_usd > 0 ? Math.min(1, spend.spent_usd / spend.limit_usd) : 0

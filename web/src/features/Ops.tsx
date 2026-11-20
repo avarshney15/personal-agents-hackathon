@@ -2,7 +2,8 @@
 import { getOps } from './data'
 import { pct, usd } from './format'
 import type { ArmStat, OpsSummary } from './types'
-import { ErrorLine, Loading, StatusPill, useLoad } from './ui'
+import { ErrorLine, Loading, StatusPill } from './ui'
+import { useLoad } from './useLoad'
 import './features.css'
 
 function tiles(o: OpsSummary) {
@@ -22,7 +23,7 @@ function armRows(arms: ArmStat[]) {
 }
 
 export function OpsScreen() {
-  const { load, reload } = useLoad(getOps)
+  const { load, reload } = useLoad(getOps, 'Couldn’t load the dashboard.')
 
   return (
     <main className="ft-ops" aria-labelledby="ft-ops-title" aria-busy={load.state === 'loading'}>

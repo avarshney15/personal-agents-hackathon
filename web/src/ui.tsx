@@ -88,10 +88,23 @@ export function Logo({ size = 28 }: { size?: number }) {
 
 // ---------------------------------------------------------------- event bits
 
-export function Tile({ id, title, size = 64 }: { id: string; title: string; size?: number }) {
+/** The event tile. Colours and initials come from the id and title unless given (canvas samples). */
+export function Tile({
+  id,
+  title,
+  size = 64,
+  colors,
+  initials: text,
+}: {
+  id: string
+  title: string
+  size?: number
+  colors?: [string, string]
+  initials?: string
+}) {
   return (
-    <span className="tile" style={{ background: tileGradient(id), width: size, height: size }} aria-hidden="true">
-      {initials(title)}
+    <span className="tile" style={{ background: tileGradient(id, colors), width: size, height: size }} aria-hidden="true">
+      {text ?? initials(title)}
     </span>
   )
 }

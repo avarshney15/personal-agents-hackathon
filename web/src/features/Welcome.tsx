@@ -2,10 +2,10 @@
 import { useContext, useEffect, useRef, useState, type FormEvent } from 'react'
 import { apiMode } from '../api'
 import { AppContext } from '../app-state'
-import { errorText } from '../errors'
 import { useNav } from '../nav'
 import { Icon } from '../ui'
 import { authStart, authVerify } from './data'
+import { failText } from './fail'
 import { SAMPLE_EMAIL } from './samples'
 import './features.css'
 
@@ -56,7 +56,7 @@ export function WelcomeScreen() {
       if (step === 'code') setResent(true)
       setStep('code')
     } catch (err) {
-      setError(errorText(err))
+      setError(failText(err, 'Couldn’t send the code. Try again.'))
     } finally {
       setBusy(false)
     }
@@ -76,7 +76,7 @@ export function WelcomeScreen() {
       app?.setMe(user)
       navigate(user.verified ? { name: 'connect' } : { name: 'verify' })
     } catch (err) {
-      setError(errorText(err) || 'That code didn’t work. Check it and try again.')
+      setError(failText(err, 'Couldn’t sign you in. Try again.'))
       setBusy(false)
     }
   }

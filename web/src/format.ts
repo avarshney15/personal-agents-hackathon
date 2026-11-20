@@ -98,9 +98,15 @@ function hash(s: string): number {
   return h >>> 0
 }
 
+// Twelve hues 30 degrees apart, ordered so neighbours differ, starting with the canvas's four.
+const HUES = [150, 30, 330, 100, 200, 260, 10, 60, 180, 290, 120, 230]
+// Salt chosen so the canvas sample events (mock mode) land on different hues.
+const SALT = '3:'
+
 /** The two-colour tile gradient from the canvas, with the hue taken from the event id. */
-export function tileGradient(id: string): string {
-  const h = hash(id) % 360
+export function tileGradient(id: string, colors?: [string, string]): string {
+  if (colors) return `linear-gradient(135deg, ${colors[0]}, ${colors[1]})`
+  const h = HUES[hash(SALT + id) % HUES.length]!
   return `linear-gradient(135deg, hsl(${h},72%,62%), hsl(${(h + 40) % 360},66%,44%))`
 }
 

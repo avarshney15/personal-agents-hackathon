@@ -1,10 +1,11 @@
 // Connect your sites (design/screens/Connect.dc.html). The same screen is the Sites tab.
 import { useState } from 'react'
-import { errorText } from '../errors'
 import { useNav } from '../nav'
 import { connectCalendar, connectSite, disconnectSite, getCalendar, getSites } from './data'
+import { failText } from './fail'
 import type { CalendarStatus, Site, SiteConnection } from './types'
-import { CalendarIcon, ErrorLine, Loading, SiteIcon, useLoad } from './ui'
+import { CalendarIcon, ErrorLine, Loading, SiteIcon } from './ui'
+import { useLoad } from './useLoad'
 import './features.css'
 
 function siteState(s: SiteConnection): string {
@@ -75,8 +76,8 @@ function SiteRow({
 export function ConnectScreen() {
   const { route, navigate } = useNav()
   const asTab = route.name === 'sites'
-  const sites = useLoad(getSites)
-  const cal = useLoad(getCalendar)
+  const sites = useLoad(getSites, 'Couldn’t load your sites.')
+  const cal = useLoad(getCalendar, 'Couldn’t check your calendar.')
   const [busy, setBusy] = useState<Site | 'calendar' | null>(null)
   const [open, setOpen] = useState<Site | null>(null)
   const [error, setError] = useState('')
@@ -91,7 +92,8 @@ export function ConnectScreen() {
       sites.set(list.map((s) => (s.site === site ? updated : s)))
       if (!connect) setOpen(null)
     } catch (err) {
-      setError(errorText(err))
+      const name = sites.load.state === 'ready' ? sites.load.data.find((s) => s.site === site)?.name : site
+      setError(failText(err, `Couldn’t ${connect ? 'connect' : 'disconnect'} ${name}. Try again.`))
     } finally {
       setBusy(null)
     }
@@ -103,7 +105,7 @@ export function ConnectScreen() {
     try {
       cal.set(await connectCalendar())
     } catch (err) {
-      setError(errorText(err))
+      setError(failText(err, 'Couldn’t connect Google Calendar. Try again.'))
     } finally {
       setBusy(null)
     }
@@ -174,6 +176,7 @@ export function ConnectScreen() {
         )}
       </div>
 
+      {cal.load.state === 'error' && <ErrorLine message={cal.load.message} onRetry={cal.reload} />}
       {error && <ErrorLine message={error} />}
 
       {!asTab && (

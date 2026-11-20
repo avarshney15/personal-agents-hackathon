@@ -1,14 +1,15 @@
 // Ask (design/screens/Ask.dc.html): a query in your words, the agent's answer, results.
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { apiMode } from '../api'
-import { errorText } from '../errors'
 import { useNav } from '../nav'
 import { BackButton } from '../ui'
 import { ask } from './data'
+import { failText } from './fail'
 import { askMeta } from './format'
 import { SAMPLE_QUERY } from './samples'
 import type { AskResponse } from './types'
-import { ErrorLine, SendIcon, StatusPill, TAG_TONE } from './ui'
+import { TAG_TONE } from './tones'
+import { ErrorLine, SendIcon, StatusPill } from './ui'
 import './features.css'
 
 // The last answer, so coming back from an Event sheet shows it again.
@@ -20,6 +21,7 @@ export function AskScreen() {
   const [pending, setPending] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
   const [error, setError] = useState('')
+  const [failed, setFailed] = useState<string | null>(null)
   const [ready, setReady] = useState(last !== null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -28,13 +30,16 @@ export function AskScreen() {
     if (!q) return
     setPending(q)
     setError('')
+    setFailed(null)
     try {
       const res = await ask(q)
       last = res
       setAnswer(res)
       setDraft('')
     } catch (err) {
-      setError(errorText(err))
+      setFailed(q)
+      setAnswer(null)
+      setError(failText(err, 'Couldn’t ask the agent.'))
     } finally {
       setPending(null)
     }
@@ -59,7 +64,7 @@ export function AskScreen() {
     run(draft)
   }
 
-  const shown = pending ?? answer?.query ?? null
+  const shown = pending ?? failed ?? answer?.query ?? null
 
   return (
     <main className="screen ft-screen ft-screen--ask" aria-labelledby="ft-ask-title">
@@ -74,7 +79,7 @@ export function AskScreen() {
 
       <div aria-live="polite" className="ft-stack ft-stack--14">
         {pending && <p className="ft-loading">Looking across your sites</p>}
-        {error && <ErrorLine message={error} onRetry={() => run(shown ?? draft)} />}
+        {error && <ErrorLine message={error} onRetry={() => run(failed ?? draft)} />}
 
         {!pending && answer && (
           <>
@@ -100,7 +105,7 @@ export function AskScreen() {
         )}
       </div>
 
-      {ready && !answer && !pending && (
+      {ready && !answer && !pending && !failed && (
         <div className="ft-stack">
           <p className="ft-sub">Ask for events in your own words. The agent searches your sites and says why each one fits.</p>
           <button type="button" className="ft-suggest" onClick={() => run(SAMPLE_QUERY)}>
