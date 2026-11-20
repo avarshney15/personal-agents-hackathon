@@ -62,7 +62,7 @@ export function AskScreen() {
   const shown = pending ?? answer?.query ?? null
 
   return (
-    <main className="ft-screen ft-screen--ask" aria-labelledby="ft-ask-title">
+    <main className="screen ft-screen ft-screen--ask" aria-labelledby="ft-ask-title">
       <div className="ft-backbar">
         <BackButton />
         <h1 id="ft-ask-title" className="ft-sheet-title">

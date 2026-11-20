@@ -83,7 +83,7 @@ export function WelcomeScreen() {
 
   if (step === 'code') {
     return (
-      <main className="ft-screen ft-screen--welcome" aria-labelledby="ft-code-title">
+      <main className="screen ft-screen ft-screen--welcome" aria-labelledby="ft-code-title">
         <span className="ft-logo" aria-hidden="true">
           <Icon name="check" size={30} stroke={2.4} />
         </span>
@@ -159,7 +159,7 @@ export function WelcomeScreen() {
   }
 
   return (
-    <main className="ft-screen ft-screen--welcome" aria-labelledby="ft-welcome-title">
+    <main className="screen ft-screen ft-screen--welcome" aria-labelledby="ft-welcome-title">
       <span className="ft-logo" aria-hidden="true">
         <Icon name="check" size={30} stroke={2.4} />
       </span>

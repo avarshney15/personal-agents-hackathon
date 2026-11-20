@@ -51,6 +51,13 @@ function next(weekday: number, hour: number, minute = 0): string {
   return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}T${pad(hour)}:${pad(minute)}:00${PT_OFFSET}`
 }
 
+/** Today at a Pacific time, as ISO. */
+function today(hour: number, minute = 0): string {
+  const t = ptToday()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${t.y}-${pad(t.m)}-${pad(t.d)}T${pad(hour)}:${pad(minute)}:00${PT_OFFSET}`
+}
+
 const nowIso = () => new Date().toISOString()
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
@@ -139,6 +146,93 @@ const EVENTS: Event[] = [
   },
 ]
 
+// Events drawn on the other canvas screens (Week, Ask). Not in For you, but they open sheets.
+const base = (e: Partial<Event> & { id: string; title: string; starts_at: string }): Event => ({
+  ends_at: null,
+  venue: '',
+  neighborhood: '',
+  url: `https://lu.ma/${e.id.replace(/^canvas-/, '')}`,
+  source: 'seed',
+  host: '',
+  description: '',
+  free: true,
+  spots_left: null,
+  has_questions: false,
+  tags: [],
+  site: 'luma',
+  going_count: null,
+  friends_going: [],
+  price_text: 'Free',
+  ...e,
+})
+
+const CANVAS_EVENTS: Event[] = [
+  base({
+    id: 'canvas-personal-agents-hack',
+    title: 'Personal Agents Hack',
+    starts_at: today(9, 30),
+    ends_at: today(17, 0),
+    venue: 'SoMa',
+    neighborhood: 'SoMa',
+    host: 'tokens&',
+    description: 'A day of building personal agents.',
+    tags: ['AI agents', 'hackathon'],
+    going_count: 200,
+  }),
+  base({
+    id: 'canvas-design-systems-dinner',
+    title: 'Design systems dinner',
+    starts_at: next(2, 20),
+    ends_at: next(2, 22),
+    venue: 'Hayes Valley',
+    neighborhood: 'Hayes Valley',
+    url: 'https://partiful.com/e/design-systems-dinner',
+    host: 'Priya',
+    description: 'Dinner for people who build design systems.',
+    tags: ['design', 'dinner'],
+    site: 'partiful',
+  }),
+  base({
+    id: 'canvas-browser-agents',
+    title: 'Browser agents build night',
+    starts_at: next(3, 18),
+    ends_at: next(3, 21),
+    venue: 'Mission',
+    neighborhood: 'Mission',
+    host: 'Agent Builders SF',
+    description: 'Build agents that drive a real browser.',
+    tags: ['AI agents', 'hackathon'],
+    going_count: 80,
+  }),
+  base({
+    id: 'canvas-weekend-sprint',
+    title: 'Weekend agent sprint',
+    starts_at: next(6, 10),
+    ends_at: next(6, 18),
+    venue: 'SoMa',
+    neighborhood: 'SoMa',
+    host: 'Agent Builders SF',
+    description: 'A Saturday sprint on agent projects.',
+    tags: ['AI agents', 'hackathon'],
+    going_count: 150,
+  }),
+  base({
+    id: 'canvas-voice-agents',
+    title: 'Voice agents hack evening',
+    starts_at: next(4, 17, 30),
+    ends_at: next(4, 21),
+    venue: 'FiDi',
+    neighborhood: 'FiDi',
+    host: 'Voice AI SF',
+    description: 'An evening hacking on voice agents.',
+    tags: ['AI agents', 'voice'],
+    going_count: 120,
+  }),
+]
+
+const ALL_EVENTS = [...EVENTS, ...CANVAS_EVENTS]
+const findEvent = (id: string) => ALL_EVENTS.find((e) => e.id === id)
+
 interface Rank {
   base: number
   keywords: string[]
@@ -184,6 +278,38 @@ const RANK: Record<string, Rank> = {
   },
 }
 
+const canvasRank = (why: string, longWhy: string, tag: Pick['tag'] = 'Strong match'): Rank => ({
+  base: 0.5,
+  keywords: ['ai', 'agent', 'agents', 'hackathon'],
+  boost: 0.2,
+  matched: { tag, why },
+  plain: { tag, why },
+  longWhy,
+})
+RANK['canvas-personal-agents-hack'] = canvasRank(
+  'You’re here today.',
+  'You’re at this one today. Hands-on, and about AI agents, which you said lately.',
+)
+RANK['canvas-design-systems-dinner'] = canvasRank(
+  'Priya invited you on Partiful.',
+  'Priya invited you on Partiful, and it’s a small dinner, not a big mixer.',
+  'Match',
+)
+RANK['canvas-browser-agents'] = canvasRank(
+  'Hands-on, and the host ran two events you went to.',
+  'Hands-on, under 300 people, and hosted by Agent Builders SF, whose last two events you went to.',
+)
+RANK['canvas-weekend-sprint'] = canvasRank(
+  'A weekend build day, under 300 people.',
+  'A weekend build day on agents, under 300 people, which fits what you asked for.',
+  'Match',
+)
+RANK['canvas-voice-agents'] = canvasRank(
+  'Agents again, on a weekday evening.',
+  'Agents again, on a weekday evening, which is when you usually go.',
+  'Match',
+)
+
 let factSeq = 0
 const fact = (kind: FactKind, text: string, from_text: string, event_id?: string): Fact => ({
   id: `fact-${++factSeq}`,
@@ -222,7 +348,7 @@ const state = {
   runSeq: 0,
   sites: [
     { site: 'luma', name: 'Luma', connected: true, event_count: 14 },
-    { site: 'partiful', name: 'Partiful', connected: false, event_count: 0 },
+    { site: 'partiful', name: 'Partiful', connected: true, event_count: 3 },
     { site: 'meetup', name: 'Meetup', connected: false, event_count: 0 },
     { site: 'eventbrite', name: 'Eventbrite', connected: false, event_count: 0 },
   ] as SiteConnection[],
@@ -312,7 +438,7 @@ function tick(m: MockRun) {
       r.outcome = 'going'
       r.ended_at = nowIso()
       r.cost_usd = 0.18
-      const event = EVENTS.find((e) => e.id === r.event_id)
+      const event = findEvent(r.event_id)
       if (event) {
         state.facts.went.unshift(
           fact('went', `Going to ${event.title}`, `The agent RSVPed for you, ${shortDate(new Date())}`, event.id),
@@ -365,6 +491,37 @@ function getRun(id: string): MockRun {
   return m
 }
 
+/** Finished runs drawn on the canvas, so Week and Activity rows open real RSVP pages. */
+function seedRun(id: string, eventId: string, outcome: 'going' | 'waitlist', minutesAgo: number) {
+  const at = Date.now() - minutesAgo * 60_000
+  const run: RsvpRun = {
+    id,
+    user_id: 'demo',
+    event_id: eventId,
+    status: 'done',
+    stop_reason: null,
+    started_at: new Date(at).toISOString(),
+    ended_at: new Date(at + 40_000).toISOString(),
+    steps: STEP_ORDER.map((key) => ({
+      run_id: id,
+      key,
+      title: STEP_TEXT[key][0],
+      detail: key === 'told_host' ? `“${disclosureFor('Maya R.')}”` : STEP_TEXT[key][1],
+      state: 'done' as StepState,
+    })),
+    has_frame: true,
+    need: null,
+    outcome,
+    cost_usd: 0.16,
+    model: 'claude-opus-5-5',
+    site: 'luma',
+    arm: 'sie',
+  }
+  state.runs.set(id, { run, idx: STEP_ORDER.length, phaseAt: at, needAt: null, answered: true })
+}
+seedRun('mock-run-builders', 'fake-agent-builders', 'going', 95)
+seedRun('mock-run-bouldering', 'fake-bouldering', 'waitlist', 60)
+
 const clone = <T,>(v: T): T => structuredClone(v)
 
 // ---------------------------------------------------------------- router
@@ -380,7 +537,6 @@ export async function mockRequest(method: string, path: string, body?: unknown):
       return { ok: true }
 
     case 'GET /me':
-      if (state.user.id === '') throw new ApiError(401, 'Signed out')
       return clone(state.user)
     case 'PATCH /me':
       Object.assign(state.user, b)
@@ -426,7 +582,7 @@ export async function mockRequest(method: string, path: string, body?: unknown):
     }
 
     case 'GET /events': {
-      const event = EVENTS.find((e) => e.id === seg[1])
+      const event = findEvent(seg[1] ?? '')
       if (!event) throw new ApiError(404, 'Event not found')
       if (seg[2] === 'detail') return detail(event)
       return clone(event)
@@ -452,7 +608,7 @@ export async function mockRequest(method: string, path: string, body?: unknown):
       }
       if (!state.user.verified) throw new ApiError(403, 'Verify once before the agent RSVPs for you.')
       const eventId = String(b.event_id ?? '')
-      if (!EVENTS.some((e) => e.id === eventId)) throw new ApiError(404, 'Event not found')
+      if (!findEvent(eventId)) throw new ApiError(404, 'Event not found')
       return clone(newRun(eventId))
     }
     case 'GET /rsvp':
@@ -510,7 +666,7 @@ export async function mockFrame(runId: string): Promise<Blob | null> {
   if (!m) return null
   tick(m)
   if (!m.run.has_frame && m.idx < 1) return null
-  const event = EVENTS.find((e) => e.id === m.run.event_id)
+  const event = findEvent(m.run.event_id)
   const step = m.run.steps.find((s) => s.state === 'current') ?? m.run.steps[m.run.steps.length - 1]!
   const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   const going = m.run.status === 'done'
@@ -559,7 +715,11 @@ function detail(event: Event): EventDetail {
 function week(): WeekResponse {
   const items = [...state.runs.values()]
     .filter((m) => m.run.status === 'done')
-    .map((m) => ({ event: EVENTS.find((e) => e.id === m.run.event_id)!, status: 'going' as const, run_id: m.run.id }))
+    .map((m) => ({
+      event: findEvent(m.run.event_id)!,
+      status: m.run.outcome === 'waitlist' ? ('waitlist' as const) : ('going' as const),
+      run_id: m.run.id,
+    }))
   return {
     days: items.map((it) => ({
       date: it.event.starts_at.slice(0, 10),
@@ -586,14 +746,22 @@ function askResult(text: string): AskResponse {
 
 function activity(): ActivityResponse {
   const items = [...state.runs.values()].map((m) => {
-    const event = EVENTS.find((e) => e.id === m.run.event_id)
-    const tone: 'ok' | 'wait' | 'needs' = m.run.status === 'done' ? 'ok' : m.run.status === 'needs_you' ? 'needs' : 'wait'
+    const event = findEvent(m.run.event_id)
+    const tone: 'ok' | 'wait' | 'needs' =
+      m.run.status === 'done' && m.run.outcome !== 'waitlist' ? 'ok' : m.run.status === 'needs_you' ? 'needs' : 'wait'
     return {
       id: m.run.id,
       what: `RSVP · ${event?.title ?? ''}`,
       where: `Luma · ${STEP_ORDER.length} steps`,
       at: m.run.started_at,
-      result: m.run.status === 'done' ? 'Going' : m.run.status === 'needs_you' ? 'Needs you' : 'Working',
+      result:
+        m.run.status === 'done'
+          ? m.run.outcome === 'waitlist'
+            ? 'Waitlist'
+            : 'Going'
+          : m.run.status === 'needs_you'
+            ? 'Needs you'
+            : 'Working',
       tone,
       run_id: m.run.id,
     }

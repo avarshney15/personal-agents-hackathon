@@ -8,7 +8,7 @@
   width: 100%;
   max-width: var(--column);
   margin: 0 auto;
-  min-height: 100dvh;
+  min-height: 100%;
   padding: 60px var(--space-4) 32px;
   display: flex;
   flex-direction: column;
@@ -19,8 +19,8 @@
 }
 .ft-screen--gap18 { gap: 18px; }
 .ft-screen--welcome { padding-top: 96px; gap: var(--space-6); }
-/* Tab screens: leave room for Part 7's floating tab bar (64px, 24px from the bottom). */
-.ft-screen--tabbed { gap: var(--space-3); padding-bottom: calc(var(--tabbar) + 48px); }
+/* Week: rows sit 12px apart. The shell adds the tab bar's bottom padding. */
+.ft-screen--list { gap: var(--space-3); }
 
 .ft-screen *:focus-visible,
 .ft-ops *:focus-visible {
@@ -52,6 +52,10 @@
 .ft-stack { display: flex; flex-direction: column; gap: var(--space-2); }
 .ft-stack--10 { gap: 10px; }
 .ft-stack--4 { gap: 4px; }
+.ft-stack--14 { gap: 14px; }
+.ft-list { list-style: none; margin: 0; padding: 0; }
+.ft-h-reset { margin: 0; }
+.ft-strong { color: var(--ink); font-weight: 650; }
 
 .ft-sr {
   position: absolute;
@@ -189,8 +193,24 @@ textarea.ft-field {
 .ft-pill--needs { background: var(--needs-bg); color: var(--needs); }
 .ft-pill--quiet { background: var(--surface-2); color: var(--ink); }
 
-.ft-tile {
+/* Tiles: the shared Tile from web/src/ui.tsx, sized as drawn on the Week canvas. */
+.ft-event-art .tile {
+  width: var(--tile-size);
+  height: var(--tile-size);
+  border-radius: var(--radius-tile);
   color: #ffffff; /* white initials on the gradient, as drawn */
+  font-size: 20px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ft-site-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  color: #ffffff; /* white initials on the gradient, as drawn */
+  font-size: 15px;
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -215,8 +235,7 @@ textarea.ft-field {
   padding: var(--space-3) 0;
   border-bottom: 1px solid var(--line);
 }
-.ft-card--list > .ft-row:last-child,
-.ft-card--list > .ft-site:last-child > .ft-row { border-bottom: 0; }
+.ft-card--list > li:last-child > .ft-row { border-bottom: 0; }
 .ft-row-text { display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0; }
 .ft-row-title { font-size: 16px; font-weight: 650; }
 .ft-row-title--15 { font-size: 15px; }
@@ -281,6 +300,7 @@ button.ft-row:hover .ft-row-title { text-decoration: underline; text-underline-o
 }
 .ft-site-manage .ft-link { color: var(--danger); font-size: 14px; }
 .ft-card--list > .ft-site:last-child > .ft-site-manage { border-bottom: 0; }
+.ft-link:disabled { opacity: 0.6; cursor: default; }
 .ft-site--open > .ft-row { border-bottom: 0; }
 
 /* ---------------------------------------------------------------- Week */
@@ -448,6 +468,7 @@ button.ft-row:hover .ft-row-title { text-decoration: underline; text-underline-o
 .ft-ops-inner { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
 .ft-ops-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: var(--space-3); }
 .ft-ops-head .ft-head { gap: 6px; }
+.ft-ops .ft-sub { max-width: none; }
 .ft-sample {
   font-size: 12px;
   font-weight: 700;

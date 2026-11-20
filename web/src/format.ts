@@ -89,6 +89,12 @@ function hash(s: string): number {
     h ^= s.charCodeAt(i)
     h = Math.imul(h, 16777619)
   }
+  // Final mix, so ids that differ only near the end still land on far-apart hues.
+  h ^= h >>> 16
+  h = Math.imul(h, 0x85ebca6b)
+  h ^= h >>> 13
+  h = Math.imul(h, 0xc2b2ae35)
+  h ^= h >>> 16
   return h >>> 0
 }
 

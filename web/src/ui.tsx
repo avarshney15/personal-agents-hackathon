@@ -102,8 +102,8 @@ export function Pill({ tone, children, small }: { tone: Tone; children: ReactNod
   return <span className={`pill tone-${tone}${small ? ' pill-small' : ''}`}>{children}</span>
 }
 
-export const tagTone = (tag: PickTag | null | undefined): Tone =>
-  tag === 'Strong match' ? 'going' : tag === 'Match' ? 'invited' : 'quiet'
+// Canvas: Strong match on going colours; Match and Something new on surface-2 with ink.
+export const tagTone = (tag: PickTag | null | undefined): Tone => (tag === 'Strong match' ? 'going' : 'quiet')
 
 // ---------------------------------------------------------------- buttons
 

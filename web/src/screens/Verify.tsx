@@ -1,6 +1,6 @@
 // Verify once with Persona (design/screens/Verify.dc.html).
 import { useEffect, useRef, useState } from 'react'
-import { getVerifyStatus, startVerify } from '../api'
+import { getMe, getVerifyStatus, startVerify } from '../api'
 import { useApp } from '../app-state'
 import { errorText } from '../errors'
 import { shortDate } from '../format'
@@ -50,7 +50,13 @@ export function VerifyScreen({
     async () => {
       try {
         const { verified } = await getVerifyStatus()
-        if (verified) setMe({ ...me, verified: true })
+        if (!verified) return
+        // Reload for verified_at and anything else the backend set; fall back to a local flip.
+        try {
+          setMe(await getMe())
+        } catch {
+          setMe({ ...me, verified: true })
+        }
       } catch {
         // keep polling; a blip shouldn't stop it
       }

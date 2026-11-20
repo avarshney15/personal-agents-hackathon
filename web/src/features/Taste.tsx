@@ -84,7 +84,7 @@ export function TasteScreen() {
   }
 
   return (
-    <main className="ft-screen ft-screen--gap18" aria-labelledby="ft-taste-title">
+    <main className="screen ft-screen ft-screen--gap18" aria-labelledby="ft-taste-title">
       <div className="ft-head">
         <h1 id="ft-taste-title" className="ft-title">
           What are you into right now?

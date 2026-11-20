@@ -25,7 +25,8 @@ if (returnedFromPersona) {
   const params = new URLSearchParams(window.location.search)
   params.delete('verified')
   const q = params.toString()
-  window.history.replaceState(null, '', `${window.location.pathname}${q ? `?${q}` : ''}#/verify`)
+  window.history.replaceState(null, '', `${window.location.pathname}${q ? `?${q}` : ''}`)
+  navigate({ name: 'verify' }, { replace: true })
 }
 
 interface Watched {

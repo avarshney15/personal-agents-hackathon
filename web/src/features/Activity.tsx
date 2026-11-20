@@ -37,7 +37,7 @@ export function ActivityScreen() {
   const share = spend && spend.limit_usd > 0 ? Math.min(1, spend.spent_usd / spend.limit_usd) : 0
 
   return (
-    <main className="ft-screen" aria-labelledby="ft-activity-title" aria-busy={load.state === 'loading'}>
+    <main className="screen ft-screen" aria-labelledby="ft-activity-title" aria-busy={load.state === 'loading'}>
       <div className="ft-head">
         <h1 id="ft-activity-title" className="ft-title">
           What the agent did
