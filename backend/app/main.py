@@ -206,8 +206,7 @@ def add_into(body: IntoBody, user: User = Depends(current_user)) -> FeedResponse
     feed = _feed()
     chips = feed.add_into(user, text)
     user = get_store().set_into(user.id, _merge_chips(user.into, chips)) or user
-    _track(user.id, "into_added", {"text": text, "chips": chips})
-    return feed.build_feed(user, limit=20)
+    return feed.build_feed(user, limit=20)  # feed.add_into tracks into_added
 
 
 @app.delete("/api/into/{tag}", response_model=FeedResponse)

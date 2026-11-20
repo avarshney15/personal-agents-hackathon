@@ -9,6 +9,7 @@ agent's thread waits until `answer()` (POST /api/rsvp/{id}/answer), `cancel()`, 
 
 from __future__ import annotations
 
+import contextlib
 import inspect
 import logging
 import threading
@@ -167,6 +168,17 @@ def _after_done(user: User, event: Event) -> None:
         log.exception("memory remember failed for %s", event.id)
 
 
+def _telemetry_run(user: User, run_id: str, event: Event):
+    """Telemetry.run(...) if the telemetry has it; a no-op context otherwise."""
+    try:
+        run = get_store().get_run(run_id)
+        return registry.get_telemetry().run(user.id, run_id, arm=run.arm if run else None,
+                                            event_id=event.id)
+    except Exception:  # telemetry must never break a run
+        log.exception("telemetry run context for %s failed", run_id)
+        return contextlib.nullcontext()
+
+
 def _job(run_id: str, user: User, event: Event) -> None:
     store = get_store()
     props = {"run_id": run_id, "event_id": event.id}
@@ -203,7 +215,8 @@ def _job(run_id: str, user: User, event: Event) -> None:
                     kwargs["ask_user"] = _make_ask_user(run_id, user, props)
             except (TypeError, ValueError):
                 pass
-            result = agent.run(run_id, user, event, disclosure, on_step, on_frame, **kwargs)
+            with _telemetry_run(user, run_id, event):  # one Amplitude session per RSVP run
+                result = agent.run(run_id, user, event, disclosure, on_step, on_frame, **kwargs)
     except Exception as exc:  # any crash ends the run as failed, with the reason shown
         log.exception("rsvp run %s failed", run_id)
         result = RsvpResult(status="failed",
