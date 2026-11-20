@@ -11,6 +11,7 @@ If Luma asks for an emailed code, you're prompted for it here.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 import time
@@ -28,6 +29,24 @@ from app.act.browser_agent import BrowserRsvpAgent  # noqa: E402
 from app.contracts import DISCLOSURE_TEMPLATE, Event, RunNeed, RsvpStep, User  # noqa: E402
 
 MARK = {"current": "…", "done": "✓", "failed": "✗", "waiting": "·"}
+
+
+def catalog_event(url: str):
+    """The seeded catalog's Event for this URL (data/events.json), so its flags are checked too."""
+    path = BACKEND.parent / "data" / "events.json"
+    try:
+        data = json.loads(path.read_text())
+    except (OSError, ValueError):
+        return None
+    items = data if isinstance(data, list) else data.get("events", [])
+    want = url.rstrip("/").split("?")[0].split("/")[-1]
+    for item in items:
+        if str(item.get("url", "")).rstrip("/").split("/")[-1] == want or item.get("id") == want:
+            try:
+                return Event(**item)
+            except Exception:
+                return None
+    return None
 
 
 def main() -> int:
@@ -64,8 +83,10 @@ def main() -> int:
         return answer or None
 
     user = User(id="demo", name=args.name, verified=True)
-    event = Event(id="try", title=args.title, starts_at=datetime.now(), url=args.url,
-                  source="luma")
+    event = catalog_event(args.url) or Event(id="try", title=args.title,
+                                             starts_at=datetime.now(), url=args.url,
+                                             source="luma")
+    print(f"event: {event.title} ({event.url})")
     agent = BrowserRsvpAgent(profile_dir=args.profile, headless=False if args.headed else None,
                              model=args.model)
     print(f"model {agent.model} · profile {Path(agent.profile_dir).resolve()} · "

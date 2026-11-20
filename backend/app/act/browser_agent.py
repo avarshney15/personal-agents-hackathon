@@ -624,9 +624,12 @@ class BrowserRsvpAgent:
                             if block is last_computer and block.name not in ("screenshot",
                                                                              "zoom"):
                                 # Show the outcome of the turn's last action without another
-                                # round trip.
-                                content = [{"type": "text", "text": str(content)},
-                                           computer.image_block(computer.screenshot())]
+                                # round trip (best effort: the action itself already worked).
+                                try:
+                                    content = [{"type": "text", "text": str(content)},
+                                               computer.image_block(computer.screenshot())]
+                                except Exception as exc:
+                                    log.info("post-action screenshot skipped: %s", exc)
                             result["content"] = content
                         except StopRun as stop:
                             raise _Stop("needs_you", str(stop),
