@@ -229,8 +229,7 @@ def get_event(event_id: str, user: User = Depends(current_user)) -> Event:
     event = registry.get_catalog().get(event_id)
     if not event:
         raise HTTPException(404, f"No event {event_id}.")
-    _track(user.id, "pick_opened", {"event_id": event_id})
-    return event
+    return event  # pick_opened is tracked by the Event sheet's /detail route
 
 
 class RsvpBody(BaseModel):
