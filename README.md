@@ -10,6 +10,7 @@ session it hosts for you. Every RSVP tells the host it's an agent acting for a v
   [Agent architecture](https://claude.ai/artifact/6snCsmF9qDBbjUA8AaNENZ) ·
   [Design canvas](https://claude.ai/artifact/2HaekLGqUwmWq3kKQx3F61)
 - Screens and design tokens from the canvas: `design/`
+- Setup for every sponsor track: `SETUP.md`
 - API: `backend/API.md` · Shared shapes and interfaces: `backend/app/contracts.py`
 
 ## Sponsors
