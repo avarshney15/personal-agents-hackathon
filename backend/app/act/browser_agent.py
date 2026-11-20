@@ -407,12 +407,17 @@ class BrowserRsvpAgent:
             tab = ctx.new_page()
             tab.set_viewport_size({"width": VIEWPORT[0], "height": VIEWPORT[1]})
             try:
+                tab.bring_to_front()  # the run happens where people can watch it
+            except Exception:
+                pass
+            try:
                 return self._drive(ctx, steps, user, event, disclosure, on_frame, ask_user,
                                    clock, start_page=tab)
             finally:
                 try:
-                    tab.close()
-                    browser.close()  # disconnects only; the Chrome app and its sign-in stay
+                    if not chrome_app.keep_tabs():
+                        tab.close()
+                    browser.close()  # disconnects only; Chrome, its sign-in and the tab stay
                 except Exception:
                     pass
 

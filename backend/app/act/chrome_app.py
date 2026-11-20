@@ -7,7 +7,7 @@ yourself, ticking the human check by hand; the agent then works in a new tab of 
 where you can watch it. The agent never ticks a human check itself: those hand back to you.
 
 Env: CHROME_PATH (the macOS app by default), CHROME_PROFILE_DIR (~/.event-agent/chrome),
-CHROME_DEBUG_PORT (9222).
+CHROME_DEBUG_PORT (9222), CHROME_KEEP_TABS (1: each run's tab stays open on its result).
 """
 
 from __future__ import annotations
@@ -32,6 +32,11 @@ def profile_dir() -> Path:
     path = Path(os.getenv("CHROME_PROFILE_DIR", "~/.event-agent/chrome")).expanduser().resolve()
     path.mkdir(parents=True, exist_ok=True)
     return path
+
+
+def keep_tabs() -> bool:
+    """CHROME_KEEP_TABS=1 (default): a run's tab stays open on the result page afterwards."""
+    return os.getenv("CHROME_KEEP_TABS", "1").strip().lower() not in ("0", "false", "no")
 
 
 def cdp_url() -> str:

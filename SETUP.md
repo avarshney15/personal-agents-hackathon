@@ -43,7 +43,8 @@ section below, remove that module from the list. `ACT_FAKE=0` turns on the real 
    bundled browser, where Luma's "Verify you are human" check never clears:
    `cd backend && .venv/bin/python scripts/login_luma.py` opens Chrome on its own profile
    (`~/.event-agent/chrome`) at Luma's sign-in page. Tick the check yourself, sign in, and **leave that
-   Chrome window open**: every RSVP runs in a new tab there, and you can watch it.
+   Chrome window open**: every RSVP runs in a new tab there, brought to the front, and the tab stays open
+   on the result afterwards (`CHROME_KEEP_TABS=0` closes it).
    Check it: `.venv/bin/python scripts/login_luma.py --check`.
 4. One real test RSVP (this registers your Luma account for a real event):
    `.venv/bin/python scripts/try_rsvp.py https://luma.com/fastmcp-meetup-dec26`
