@@ -1,1 +1,3 @@
 # Part-owned: add this part's own dependencies below
+# Part 1 (memory): Cognee SDK. Brings fastembed, lancedb, litellm, openai, aiohttp.
+cognee==1.6.10
