@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Agent builders night · Luma</title>
+<style>
+  body { margin: 0; font-family: -apple-system, Helvetica, Arial, sans-serif; color: #111214;
+         background: #f5f4f0; width: 1280px; height: 800px; position: relative; overflow: hidden; }
+  header { position: absolute; left: 0; top: 0; width: 1280px; height: 60px; background: #fff;
+           border-bottom: 1px solid #e6e4de; }
+  .logo { position: absolute; left: 40px; top: 18px; font-weight: 700; font-size: 20px; }
+  #account { position: absolute; right: 40px; top: 14px; width: 32px; height: 32px;
+             border-radius: 50%; background: #2a5cb3; color: #fff; text-align: center;
+             line-height: 32px; font-weight: 700; }
+  #signin { position: absolute; right: 40px; top: 18px; font-size: 16px; color: #2a5cb3; }
+  #about { position: absolute; left: 40px; top: 100px; width: 580px; }
+  #about h1 { font-size: 34px; margin: 0 0 12px; }
+  #reg { position: absolute; left: 680px; top: 100px; width: 440px; height: 520px;
+         background: #fff; border-radius: 16px; box-shadow: 0 6px 24px rgba(0,0,0,.08); }
+  #reg h2 { position: absolute; left: 20px; top: 8px; font-size: 18px; }
+  #price { position: absolute; left: 20px; top: 70px; font-size: 22px; font-weight: 700; }
+  #spots { position: absolute; left: 20px; top: 110px; color: #6b6e76; }
+  #q-label { position: absolute; left: 20px; top: 170px; font-size: 14px; }
+  #q { position: absolute; left: 20px; top: 195px; width: 392px; height: 32px; }
+  #note-label { position: absolute; left: 20px; top: 270px; font-size: 14px; }
+  #note { position: absolute; left: 20px; top: 300px; width: 392px; height: 72px; }
+  #register { position: absolute; left: 20px; top: 420px; width: 400px; height: 48px;
+              border: 0; border-radius: 24px; background: #111214; color: #fff; font-size: 16px; }
+  #status { position: absolute; left: 20px; top: 70px; width: 400px; font-size: 26px;
+            font-weight: 700; color: #1f7a46; }
+  #status-note { position: absolute; left: 20px; top: 120px; width: 400px; color: #6b6e76; }
+  #code-modal { position: absolute; left: 340px; top: 200px; width: 600px; height: 300px;
+                background: #fff; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,.25); }
+  #code-modal p { position: absolute; left: 30px; top: 20px; font-size: 20px; font-weight: 700; }
+  #code { position: absolute; left: 30px; top: 110px; width: 300px; height: 40px; font-size: 22px; }
+  #code-go { position: absolute; left: 30px; top: 190px; width: 200px; height: 44px; }
+  #code-error { position: absolute; left: 30px; top: 160px; color: #c2410c; }
+</style>
+</head>
+<body>
+<header>
+  <span class="logo">luma</span>
+  <span id="account" aria-label="Account">M</span>
+  <a id="signin" href="/signin">Sign In</a>
+</header>
+
+<section id="about">
+  <h1>Agent builders night</h1>
+  <div>Tuesday, 6:30 PM · SoMa, San Francisco</div>
+  <p>Hosted by Agent Builders SF. Demos, then hands-on hacking on personal agents.</p>
+</section>
+
+<section id="reg">
+  <h2>Registration</h2>
+  <div id="price">Free</div>
+  <div id="spots">12 spots left</div>
+  <label id="q-label" for="q">What's your GitHub handle? *</label>
+  <input id="q" name="github" required>
+  <label id="note-label" for="note">Note to the host (optional)</label>
+  <textarea id="note" name="note"></textarea>
+  <button id="register" type="button">Register</button>
+</section>
+
+<div id="code-modal">
+  <p>Enter the code we emailed you</p>
+  <input id="code" name="code" inputmode="numeric" autocomplete="one-time-code"
+         aria-label="Six-digit code">
+  <div id="code-error"></div>
+  <button id="code-go" type="button">Continue</button>
+</div>
+
+<script>
+  // ?variant=going (default) | nonote | paid | questions | signin | code | waitlist | full
+  const variant = new URLSearchParams(location.search).get('variant') || 'going';
+  const $ = id => document.getElementById(id);
+  const hide = id => { const el = $(id); if (el) el.remove(); };
+
+  const signedIn = variant !== 'signin';
+  hide(signedIn ? 'signin' : 'account');
+  if (variant !== 'questions') { hide('q'); hide('q-label'); }
+  if (variant === 'nonote' || variant === 'waitlist') { hide('note'); hide('note-label'); }
+  if (variant !== 'code') hide('code-modal');
+
+  const ld = { '@context': 'https://schema.org', '@type': 'Event', name: 'Agent builders night',
+               offers: [{ '@type': 'Offer', price: 0, priceCurrency: 'USD',
+                          availability: 'https://schema.org/InStock' }] };
+  if (variant === 'paid') {
+    $('price').textContent = '$25.00';
+    $('register').textContent = 'Get Ticket';
+    ld.offers[0].price = 25;
+  }
+  if (variant === 'waitlist' || variant === 'full') {
+    $('spots').textContent = 'Event full';
+    ld.offers[0].availability = 'https://schema.org/SoldOut';
+    if (variant === 'waitlist') $('register').textContent = 'Join Waitlist';
+    else { hide('register'); hide('note'); hide('note-label'); }
+  }
+  const s = document.createElement('script');
+  s.type = 'application/ld+json';
+  s.textContent = JSON.stringify(ld);
+  document.head.appendChild(s);
+
+  function submitCode() {
+    if ($('code').value.trim() === '123456') hide('code-modal');
+    else $('code-error').textContent = "That code didn't work.";
+  }
+  if ($('code')) {
+    $('code').addEventListener('keydown', e => { if (e.key === 'Enter') submitCode(); });
+    $('code-go').addEventListener('click', submitCode);
+  }
+
+  if ($('register')) $('register').addEventListener('click', async () => {
+    const note = $('note') ? $('note').value : '';
+    await fetch('/api/register?variant=' + encodeURIComponent(variant) +
+                '&note=' + encodeURIComponent(note));
+    const going = variant === 'waitlist' ? "You're on the waitlist" : "You're going";
+    $('reg').innerHTML = '<h2>Registration</h2><div id="status">' + going + '</div>' +
+      '<div id="status-note">Your note to the host: ' + (note || '(none)') + '</div>';
+  });
+</script>
+</body>
+</html>
