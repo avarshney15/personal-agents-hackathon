@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import importlib.util
 import logging
+import threading
 from contextlib import asynccontextmanager
 from typing import Optional
 
@@ -52,10 +53,13 @@ async def lifespan(_app: FastAPI):
         seed_demo_memory(registry.get_memory())
     except Exception:
         log.exception("seeding demo memory failed")
-    try:
-        registry.get_ranking().encode_catalog(registry.get_catalog().events())
-    except Exception:
-        log.exception("encoding the catalog failed")
+    def _warm_ranking() -> None:  # SIE encodes every event once; keep startup fast
+        try:
+            registry.get_ranking().encode_catalog(registry.get_catalog().events())
+        except Exception:
+            log.exception("encoding the catalog failed")
+
+    threading.Thread(target=_warm_ranking, name="warm-ranking", daemon=True).start()
     yield
     try:
         registry.get_telemetry().flush()
