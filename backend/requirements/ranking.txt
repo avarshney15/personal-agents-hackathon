@@ -1,1 +1,5 @@
 # Part-owned: add this part's own dependencies below
+# Part 2 (ranking). SIE is called over REST with httpx (in base.txt); the official
+# sie-sdk needs Python 3.12+, and this backend runs on 3.11.
+numpy>=1.26
+scikit-learn>=1.5
