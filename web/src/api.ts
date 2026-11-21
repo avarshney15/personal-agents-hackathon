@@ -24,7 +24,7 @@ import type {
   WeekResponse,
 } from './types'
 
-type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE'
+type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 export type ApiMode = 'live' | 'mock'
 
 let modePromise: Promise<ApiMode> | null = null
