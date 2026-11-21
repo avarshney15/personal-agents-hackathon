@@ -116,13 +116,6 @@ evals/                             replays the demo for 20 synthetic users
 design/                            the design canvas's screens and tokens
 ```
 
-## Known limits
-
-- Luma is the only site the agent can register on today. Partiful, Meetup and Eventbrite appear on the Connect screen, but connecting them only records the choice.
-- There's no email provider yet, so the sign-in code is shown on screen.
-- The sign-in cookie holds the user id unsigned. That's fine for a demo, not for real users.
-- Statsig computes experiment results daily, so its Diagnostics tab is the live view during the hackathon.
-
 ## Team
 
 Arjun Varshney
