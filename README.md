@@ -115,7 +115,3 @@ data/events.json                   real upcoming SF events from Luma
 evals/                             replays the demo for 20 synthetic users
 design/                            the design canvas's screens and tokens
 ```
-
-## Team
-
-Arjun Varshney
