@@ -1,6 +1,17 @@
 // Profile (design/screens/Profile.dc.html): identity, memory, limits, sites, delete.
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { deleteMe, getCalendar, getMemory, getSites, patchMe, type MePatch } from '../api'
+import {
+  deleteMe,
+  getCalendar,
+  getMemory,
+  getProfile,
+  getSites,
+  patchMe,
+  putProfile,
+  type AboutYou,
+  type MePatch,
+  type ProfileKey,
+} from '../api'
 import { setFlag, useApp } from '../app-state'
 import { errorText } from '../errors'
 import { initials, shortDate } from '../format'
@@ -16,12 +27,110 @@ const ASK_TEXT: Record<AskBefore, string> = {
 const LIMITS = [1, 2, 5, 10]
 const money = (n: number) => `$${n.toFixed(2)}`
 
+const ABOUT_FIELDS: { key: ProfileKey; label: string; type?: string; placeholder: string }[] = [
+  { key: 'title', label: 'Job title', placeholder: 'ML Engineer' },
+  { key: 'company', label: 'Company', placeholder: 'Where you work' },
+  { key: 'school', label: 'School', placeholder: 'Where you studied' },
+  { key: 'linkedin', label: 'LinkedIn', type: 'url', placeholder: 'https://www.linkedin.com/in/…' },
+  { key: 'github', label: 'GitHub', type: 'url', placeholder: 'https://github.com/…' },
+  { key: 'website', label: 'Website', type: 'url', placeholder: 'https://…' },
+  { key: 'location', label: 'Location', placeholder: 'San Francisco' },
+  { key: 'phone', label: 'Phone', type: 'tel', placeholder: 'Only if you want it on forms' },
+]
+
+/** "About you": what the agent may put on registration forms. Each field is one memory in Cognee. */
+function AboutYouRow({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+  const [saved, setSaved] = useState<AboutYou | null>(null)
+  const [draft, setDraft] = useState<Partial<Record<ProfileKey, string>>>({})
+  const [status, setStatus] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    getProfile()
+      .then((p) => {
+        setSaved(p)
+        setDraft(Object.fromEntries(Object.entries(p).map(([k, v]) => [k, v ?? ''])))
+      })
+      .catch(() => setSaved(null))
+  }, [])
+
+  const filled = saved ? ABOUT_FIELDS.filter((f) => saved[f.key]).map((f) => f.label) : []
+  const bioFilled = Boolean(saved?.bio)
+  const summary = filled.length || bioFilled
+    ? `${[...filled, ...(bioFilled ? ['About me'] : [])].slice(0, 3).join(', ')}${filled.length + (bioFilled ? 1 : 0) > 3 ? '…' : ''} · fills registration forms`
+    : 'Add your details · the agent fills registration forms with them'
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault()
+    setBusy(true)
+    setStatus('')
+    try {
+      // Send only what changed; an emptied field is sent as "" so the agent forgets it.
+      const changed = Object.fromEntries(
+        Object.entries(draft).filter(([k, v]) => (v ?? '').trim() !== ((saved?.[k as ProfileKey] ?? '') as string)),
+      )
+      const next = Object.keys(changed).length ? await putProfile(changed) : saved
+      if (next) {
+        setSaved(next)
+        setDraft(Object.fromEntries(Object.entries(next).map(([k, v]) => [k, v ?? ''])))
+      }
+      setStatus('Saved. The agent uses this on every registration form.')
+    } catch (err) {
+      setStatus(errorText(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <EditRow label="About you" value={summary} open={open} onToggle={onToggle}>
+      <form className="stack-10" onSubmit={submit}>
+        {ABOUT_FIELDS.map((f) => (
+          <label key={f.key} className="stack-4">
+            <span className="type-fine muted">{f.label}</span>
+            <input
+              className="field"
+              type={f.type ?? 'text'}
+              value={draft[f.key] ?? ''}
+              placeholder={f.placeholder}
+              autoComplete="off"
+              onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })}
+            />
+          </label>
+        ))}
+        <label className="stack-4">
+          <span className="type-fine muted">About me</span>
+          <textarea
+            className="field"
+            rows={3}
+            value={draft.bio ?? ''}
+            placeholder="One or two lines on what you build. The agent uses it for open-ended questions."
+            onChange={(e) => setDraft({ ...draft, bio: e.target.value })}
+          />
+        </label>
+        <p className="type-fine muted">
+          Kept in the agent's memory (Cognee) and shown under What the agent remembers. The agent never
+          invents anything that isn't here.
+        </p>
+        <button type="submit" className="btn btn-primary" disabled={busy}>
+          {busy ? 'Saving…' : 'Save'}
+        </button>
+        {status && (
+          <p className="type-fine muted" role="status">
+            {status}
+          </p>
+        )}
+      </form>
+    </EditRow>
+  )
+}
+
 export function ProfileScreen() {
   const { me, setMe } = useApp()
   const { navigate } = useNav()
   const [factCount, setFactCount] = useState<number | null>(null)
   const [sitesText, setSitesText] = useState('Luma')
-  const [open, setOpen] = useState<'limit' | 'ask' | null>(null)
+  const [open, setOpen] = useState<'about' | 'limit' | 'ask' | null>(null)
   const [error, setError] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -92,6 +201,7 @@ export function ProfileScreen() {
               : 'Not verified yet · verify once'
           }
         />
+        <AboutYouRow open={open === 'about'} onToggle={() => setOpen(open === 'about' ? null : 'about')} />
         <LinkRow
           to={{ name: 'memory' }}
           label="What the agent remembers"

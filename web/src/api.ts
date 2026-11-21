@@ -136,6 +136,12 @@ export type MePatch = Partial<{
   name: string
 }>
 export const patchMe = (patch: MePatch) => request<User>('PATCH', '/me', patch)
+
+/** "About you": the facts the RSVP agent uses to fill registration forms, stored in Cognee. */
+export type ProfileKey = 'github' | 'linkedin' | 'website' | 'title' | 'company' | 'school' | 'location' | 'phone' | 'bio'
+export type AboutYou = Record<ProfileKey, string | null>
+export const getProfile = () => request<AboutYou>('GET', '/profile')
+export const putProfile = (patch: Partial<Record<ProfileKey, string>>) => request<AboutYou>('PUT', '/profile', patch)
 export const deleteMe = () => request<Ok>('DELETE', '/me')
 
 export const getSites = () => request<SiteConnection[]>('GET', '/sites')
