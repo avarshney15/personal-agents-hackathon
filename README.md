@@ -40,9 +40,6 @@ The challenge asked for an agent that uses reliable context to make decisions, t
 | [Amplitude](https://amplitude.com) | Agent analytics: every Claude call is traced with `amplitude-ai`, and each RSVP is one session. Funnel events from picks to RSVPs, grouped by ranking arm. |
 | [Persona](https://withpersona.com) | Verify once (sandbox ID and selfie). The agent won't RSVP for anyone who isn't verified. |
 | [Anthropic](https://www.anthropic.com) Claude | Computer use drives the Chrome window and fills the forms. Claude also tags events, reads what you're into and parses Ask queries. |
-| [Airbyte](https://airbyte.com) | Built: Google Calendar through PyAirbyte for clash warnings. Not yet run against a real Google account; the demo uses a sample calendar. |
-
-Not integrated in this build: Arcee (the hook for cheaper text jobs is there, the client isn't), SingleStore, Firedrill and Guild.
 
 ## How it works
 
